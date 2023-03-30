@@ -23,6 +23,7 @@ function timetable_init_sp_bookings()
 	SP_Bookings::get_instance();
 }
 add_action('plugins_loaded', 'timetable_init_sp_bookings');
+require_once('class/booking-scheduler.class.php');
 require_once('class/members-check.class.php');
 require_once('class/db.class.php');
 require_once('class/post.class.php');
