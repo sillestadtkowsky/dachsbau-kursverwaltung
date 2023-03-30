@@ -5,7 +5,7 @@ Plugin URI: https://1.envato.market/timetable-responsive-schedule-for-wordpress
 Description: Timetable Responsive Schedule for WordPress is a powerful and easy-to-use schedule plugin for WordPress. It will help you to create a timetable view of your events in minutes. It is perfect for gym classes, school or kindergarten classes, medical departments, nightclubs, lesson plans, meal plans etc. It comes with Events Manager, Event Occurrences Shortcode, Timetable Shortcode Generator and Upcoming Events Widget.
 Author: QuanticaLabs
 Author URI: https://1.envato.market/quanticalabs-portfolio-codecanyon
-Version: 7.2
+Version: 7.2.1
 */
 
 //translation
