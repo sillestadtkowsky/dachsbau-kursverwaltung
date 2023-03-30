@@ -30,7 +30,7 @@ class SP_Bookings
 		$admin_booking_hook = add_menu_page(esc_html__('Timetable Bookings', 'timetable'), esc_html__('Timetable Bookings', 'timetable'), 'manage_options', 'timetable_admin_bookings', array($this, 'bookings_page'), '', 20);
 		add_action('load-' . $admin_booking_hook, array($this, 'screen_option'));
 		add_submenu_page('timetable_admin_bookings', esc_html__('Export Bookings', 'timetable'), esc_html__('Export Bookings', 'timetable'), 'manage_options', 'timetable_admin_bookings_export', array($this, 'bookings_export_page'));
-		add_menu_page(esc_html__('Export Buchungen für Trainer', 'timetable'), esc_html__('Export Bookings for Subscribers', 'timetable'), 'read', 'timetable_admin_bookings_export_subscriber', array($this, 'bookings_export_page'));
+		add_menu_page(esc_html__('Export Buchungen für Trainer', 'timetable'), esc_html__('Export Buchungen für Trainer', 'timetable'), 'read', 'timetable_admin_bookings_export_subscriber', array($this, 'bookings_export_page'));
 	}
 	
 	public function screen_option()
