@@ -152,7 +152,7 @@ function timetable_events_init()
 		update_option("timetable_timetable_guests_table_installed", 1);
 	}
 
-	if(!get_option("timetable_event_hours_booking_save_table_installed"))
+	if(!get_option("timetable_event_booking_save_table_installed"))
 	{
 		//create custom db table
 		$query = "CREATE TABLE IF NOT EXISTS `" . $wpdb->prefix . "event_booking_saves` (
@@ -164,7 +164,7 @@ function timetable_events_init()
 		) ENGINE = MYISAM DEFAULT CHARSET=utf8;";
 		
 		$wpdb->query($query);
-		update_option("timetable_event_hours_booking_save_table_installed", 1);
+		update_option("timetable_event_booking_save_table_installed", 1);
 	}
 	
 }  
