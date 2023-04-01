@@ -151,6 +151,21 @@ function timetable_events_init()
 		$wpdb->query($query);
 		update_option("timetable_timetable_guests_table_installed", 1);
 	}
+
+	if(!get_option("timetable_event_hours_booking_save_table_installed"))
+	{
+		//create custom db table
+		$query = "CREATE TABLE IF NOT EXISTS `" . $wpdb->prefix . "event_booking_saves` (
+			`booking_id` BIGINT( 20 ) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+			`event_hours_id` BIGINT( 20 ) UNSIGNED NOT NULL,
+			`user_id` BIGINT( 20 ) UNSIGNED NOT NULL DEFAULT 0,
+			`booking_datetime` DATETIME NOT NULL,
+			`booking_delete_datetime` DATETIME NOT NULL
+		) ENGINE = MYISAM DEFAULT CHARSET=utf8;";
+		
+		$wpdb->query($query);
+		update_option("timetable_event_hours_booking_save_table_installed", 1);
+	}
 	
 }  
 add_action("init", "timetable_events_init"); 

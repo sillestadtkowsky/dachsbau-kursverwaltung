@@ -16,6 +16,7 @@ function timetable_load_textdomain()
 add_action('plugins_loaded', 'timetable_load_textdomain');
 function timetable_init_sp_bookings()
 {
+
 	if(!class_exists('WP_List_Table'))
 	require_once(ABSPATH . 'wp-admin/includes/class-wp-list-table.php');
 	require_once('class/bookings-list.class.php');
