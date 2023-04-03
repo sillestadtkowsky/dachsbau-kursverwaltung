@@ -733,6 +733,7 @@ function tt_get_timetable($atts, $event = null)
 						{
 							if(((int)$measure==1 && in_array((int)$event_hours_tt[$weekday_fixed_number][$k]["start"], $hours)) || ((int)$measure!=1 && in_array(timetable_to_decimal_time(timetable_roundMin($event_hours_tt[$weekday_fixed_number][$k]["start"], $measure, $hours_min)), $hours)))
 							{
+								$events[$k]["week_name"] = $weekdays[$j]->post_title;
 								$events[$k]["name"] = $event_hours_tt[$weekday_fixed_number][$k]["name"];
 								$events[$k]["title"] = $event_hours_tt[$weekday_fixed_number][$k]["title"];
 								$events[$k]["tooltip"][] = $event_hours_tt[$weekday_fixed_number][$k]["tooltip"];
@@ -1038,6 +1039,7 @@ function tt_get_row_content($events, $args)
 		for($i=0; $i<$hours_count; $i++)
 		{
 			$tooltip = "";
+			$content .= '<div style="padding-top:5px;"><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
 			$content .= '<div class="event_container id-' . esc_attr($details["id"]) . (count(array_filter(array_values($details['tooltip']))) && (count($events)>1 || (count($events)==1 && $hours_count>1)) ? ' tt_tooltip' : '' ) . '"' . ($color!="" || ($text_color!="" && (count($events)>1 || (count($events)==1 && $hours_count>1))) ? ' style="' . ($color!="" ? 'background-color: #' . esc_attr($color) . ';' : '') . ($text_color!="" && (count($events)>1 || (count($events)==1 && $hours_count>1)) ? 'color: #' . esc_attr($text_color) . ';' : '') . '"': '') . (($hover_color!="" || $hover_text_color!="" || $hours_hover_text_color!="") && (count($events)>1 || (count($events)==1 && $hours_count>1)) ? ' onMouseOver="' . ($hover_color!="" ? 'this.style.background=\'#'.esc_attr($hover_color).'\';' : '') . ($hover_text_color!="" ? 'this.style.color=\'#'.esc_attr($hover_text_color).'\';jQuery(this).find(\'.event_header\').css(\'cssText\', \'color: #'.esc_attr($hover_text_color).' !important\');' : '') . ($hours_hover_text_color!="" ? 'jQuery(this).find(\'.hours\').css(\'color\',\'#'.esc_attr($hours_hover_text_color).'\');' : '') . '" onMouseOut="' . ($hover_color!="" ? 'this.style.background=\'#'.esc_attr($color).'\';' : '') . ($hover_text_color!="" ? 'this.style.color=\'#'.esc_attr($text_color).'\';jQuery(this).find(\'.event_header\').css(\'cssText\',\'color: #'.esc_attr($text_color).' !important\');' : '') . ($hours_hover_text_color!="" ? 'jQuery(this).find(\'.hours\').css(\'color\',\'#'.esc_attr($hours_text_color).'\');' : '') . '"' : '') . '>';
 			$hoursExplode = explode(" - ", $details["hours"][$i]);
 			$startHour = date($time_format, strtotime($hoursExplode[0]));
@@ -1186,6 +1188,42 @@ function tt_get_row_content($events, $args)
 	}
 	return $content;
 }
+
+/*
+*
+* @autor Silvio Osowsky
+* Die Funktion so_getDayForWeek erhält als Parameter einen Wochentag in der Form eines zweistelligen Strings, z.B. "Mo" für Montag oder "Di" für Dienstag. 
+* Die Funktion berechnet dann das Datum des nächsten Auftretens dieses Wochentags ausgehend vom aktuellen Datum und gibt dieses im Format "TT.MM.JJJJ" zurück.
+* Zunächst wird die Zeitzone auf "Europe/Berlin" gesetzt und dann ein DateTime-Objekt für das aktuelle Datum und eins für das Ziel-Datum erstellt. 
+* Das Ziel-Datum wird mithilfe der setISODate()-Methode gesetzt, die Jahr, Woche und Wochentag annimmt und das Datum des entsprechenden Tages zurückgibt.
+* Anschließend wird geprüft, ob das Ziel-Datum heute ist und falls ja, wird das aktuelle Datum im Format "TT.MM.JJJJ" zurückgegeben. 
+* Falls das Ziel-Datum noch in dieser Woche liegt, wird das Datum des Ziel-Tages im Format "TT.MM.JJJJ" zurückgegeben.
+* Wenn der Ziel-Tag bereits in dieser Woche vorbei ist, wird das Datum des Ziel-Tages in der nächsten Woche zurückgegeben
+*
+*/
+function so_getDayForWeek($weekday) {
+    date_default_timezone_set('Europe/Berlin'); // Set default timezone
+    
+    $today = new DateTime();
+    $target_day = new DateTime();
+    $target_day->setTimezone(new DateTimeZone('Europe/Berlin')); // Set timezone explicitly
+    $target_day->setISODate($today->format('Y'), $today->format('W'), array_search($weekday, ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) + 1);
+    
+    if ($today->format('N') == $target_day->format('N')) {
+        // Target day is today
+        $next_date = $today->format('d.m.Y');
+    } elseif ($today->format('N') < $target_day->format('N')) {
+        // Target day is still in the current week
+        $next_date = $target_day->format('d.m.Y');
+    } else {
+        // Target day has already passed in the current week, get the date for next week
+        $target_day->modify('+1 week');
+        $next_date = $target_day->format('d.m.Y');
+    }
+    
+    return $next_date;
+}
+
 
 function tt_get_rowspan_value($hour, $array, $rowspan, $measure, $hours_min)
 {
