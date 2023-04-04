@@ -733,6 +733,8 @@ function tt_get_timetable($atts, $event = null)
 						{
 							if(((int)$measure==1 && in_array((int)$event_hours_tt[$weekday_fixed_number][$k]["start"], $hours)) || ((int)$measure!=1 && in_array(timetable_to_decimal_time(timetable_roundMin($event_hours_tt[$weekday_fixed_number][$k]["start"], $measure, $hours_min)), $hours)))
 							{
+								$events[$k]["start"] = $event_hours_tt[$weekday_fixed_number][$k]["start"];
+								$events[$k]["end"] = $event_hours_tt[$weekday_fixed_number][$k]["end"];
 								$events[$k]["week_name"] = $weekdays[$j]->post_title;
 								$events[$k]["name"] = $event_hours_tt[$weekday_fixed_number][$k]["name"];
 								$events[$k]["title"] = $event_hours_tt[$weekday_fixed_number][$k]["title"];
@@ -948,8 +950,9 @@ function tt_get_timetable($atts, $event = null)
 						
 						$output .= '</div>';
 						
+						# pragma Section name (Datum für responsive mode setzten)
 						$output .= '<div class="value">
-									<span class="start-hour" ' . $hours_text_colors_html . '>' . $event_hours_tt[$weekday_fixed_number][$i]["start"] . '</span><span class="hour-separator" ' . $hours_text_colors_html . '> - </span><span class="end-hour" ' . $hours_text_colors_html . '>' . $event_hours_tt[$weekday_fixed_number][$i]["end"] . "</span>";
+									<span class="start-hour" ' . $hours_text_colors_html . '><div><span style="padding-bottom:5px; font-weight:bold;">' . so_getDayForWeek($weekday->post_title) . '</span></div>' . $event_hours_tt[$weekday_fixed_number][$i]["start"] . '</span><span class="hour-separator" ' . $hours_text_colors_html . '> - </span><span class="end-hour" ' . $hours_text_colors_html . '>' . $event_hours_tt[$weekday_fixed_number][$i]["end"] . "</span>";
 						
 						if($show_booking_button!="no")
 						{
@@ -1039,7 +1042,6 @@ function tt_get_row_content($events, $args)
 		for($i=0; $i<$hours_count; $i++)
 		{
 			$tooltip = "";
-			$content .= '<div style="padding-top:5px;"><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
 			$content .= '<div class="event_container id-' . esc_attr($details["id"]) . (count(array_filter(array_values($details['tooltip']))) && (count($events)>1 || (count($events)==1 && $hours_count>1)) ? ' tt_tooltip' : '' ) . '"' . ($color!="" || ($text_color!="" && (count($events)>1 || (count($events)==1 && $hours_count>1))) ? ' style="' . ($color!="" ? 'background-color: #' . esc_attr($color) . ';' : '') . ($text_color!="" && (count($events)>1 || (count($events)==1 && $hours_count>1)) ? 'color: #' . esc_attr($text_color) . ';' : '') . '"': '') . (($hover_color!="" || $hover_text_color!="" || $hours_hover_text_color!="") && (count($events)>1 || (count($events)==1 && $hours_count>1)) ? ' onMouseOver="' . ($hover_color!="" ? 'this.style.background=\'#'.esc_attr($hover_color).'\';' : '') . ($hover_text_color!="" ? 'this.style.color=\'#'.esc_attr($hover_text_color).'\';jQuery(this).find(\'.event_header\').css(\'cssText\', \'color: #'.esc_attr($hover_text_color).' !important\');' : '') . ($hours_hover_text_color!="" ? 'jQuery(this).find(\'.hours\').css(\'color\',\'#'.esc_attr($hours_hover_text_color).'\');' : '') . '" onMouseOut="' . ($hover_color!="" ? 'this.style.background=\'#'.esc_attr($color).'\';' : '') . ($hover_text_color!="" ? 'this.style.color=\'#'.esc_attr($text_color).'\';jQuery(this).find(\'.event_header\').css(\'cssText\',\'color: #'.esc_attr($text_color).' !important\');' : '') . ($hours_hover_text_color!="" ? 'jQuery(this).find(\'.hours\').css(\'color\',\'#'.esc_attr($hours_text_color).'\');' : '') . '"' : '') . '>';
 			$hoursExplode = explode(" - ", $details["hours"][$i]);
 			$startHour = date($time_format, strtotime($hoursExplode[0]));
@@ -1104,12 +1106,14 @@ function tt_get_row_content($events, $args)
 			{
 				$content .= $class_link;
 				$content .= $description1_content;
+				$content .= '<div style="padding-top:5px;">am<br><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
 				$content .= $top_hour_content;
 				$content .= $bottom_hour_content;
 				$content .= $description2_content;
 			}
 			else if((int)$event_layout==2)
 			{
+				$content .= '<div style="padding-top:5px;">am<br><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
 				$content .= $top_hour_content;
 				$content .= $bottom_hour_content;
 				$content .= $description1_content;
@@ -1120,6 +1124,7 @@ function tt_get_row_content($events, $args)
 			{
 				$content .= $class_link;
 				$content .= $description1_content;
+				$content .= '<div style="padding-top:5px;">am<br><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
 				$content .= $hours_content;
 				$content .= $description2_content;
 			}
@@ -1127,6 +1132,7 @@ function tt_get_row_content($events, $args)
 			{
 				$content .= $class_link;
 				$content .= $description1_content;
+				$content .= '<div style="padding-top:5px;">am<br><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
 				$content .= $top_hour_content;
 				$content .= $description2_content;
 			}
@@ -1222,6 +1228,22 @@ function so_getDayForWeek($weekday) {
     }
     
     return $next_date;
+}
+
+
+function so_CloseOrOpenBooking($event) {
+
+	$events[$k]["start"] = $event_hours_tt[$weekday_fixed_number][$k]["start"];
+								$events[$k]["end"] = $event_hours_tt[$weekday_fixed_number][$k]["end"];
+    date_default_timezone_set('Europe/Berlin'); // Set default timezone
+    
+    $today = new DateTime();
+    $target_day = new DateTime();
+    $target_day->setTimezone(new DateTimeZone('Europe/Berlin')); // Set timezone explicitly
+    //$target_day->setISODate($today->format('Y'), $today->format('W'), array_search($weekday, ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) + 1);
+    
+    
+    return '';
 }
 
 
