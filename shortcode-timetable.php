@@ -1325,7 +1325,12 @@ function so_CloseOrOpenBooking($event) {
 		$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));
 		$end_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['end']));
 
-		$closeCheckerTime = $kurs_close_at_Option == 'so_close_kurs_at_end_time' ? $end_time : $start_time;
+		$closeCheckerTime = $start_time;
+		if($kurs_close_at_Option == 'so_close_kurs_at_15_minutes_before_start_time'){
+			$closeCheckerTime = $start_time->modify('-15 minutes');
+		} else if($kurs_close_at_Option == 'so_close_kurs_at_30_minutes_before_start_time'){
+			$closeCheckerTime = $start_time->modify('-30 minutes');
+		}
 		
 		if ($weekday_index === $today_index) {
 			if ($today > $closeCheckerTime) {
