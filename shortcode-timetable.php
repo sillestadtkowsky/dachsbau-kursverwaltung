@@ -1149,7 +1149,22 @@ function tt_get_row_content($events, $args)
 				$content .= '</div>';
 			
 			if($show_booking_button!="no")
-				$content .= $booking_content;
+				// Buchung hier prüfen ob geschlossen oder offen
+				$booking_status = so_CloseOrOpenBooking($events);
+
+				// Greife auf den Boolean-Wert zu
+				$is_bookable = $booking_status['is_bookable'];
+
+				// Greife auf den Text zu
+				$status_text = $booking_status['status_text'];
+
+				// Gib eine Meldung aus, abhängig vom Boolean-Wert
+				if ($is_bookable) {
+					$content .= $booking_content;
+				} else {
+					$content .= $status_text;
+				}
+
 			
 			if($tooltip!="")
 			{
@@ -1233,19 +1248,43 @@ function so_getDayForWeek($weekday) {
 
 function so_CloseOrOpenBooking($event) {
 
-	$events[$k]["start"] = $event_hours_tt[$weekday_fixed_number][$k]["start"];
-								$events[$k]["end"] = $event_hours_tt[$weekday_fixed_number][$k]["end"];
-    date_default_timezone_set('Europe/Berlin'); // Set default timezone
-    
-    $today = new DateTime();
-    $target_day = new DateTime();
-    $target_day->setTimezone(new DateTimeZone('Europe/Berlin')); // Set timezone explicitly
-    //$target_day->setISODate($today->format('Y'), $today->format('W'), array_search($weekday, ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) + 1);
-    
-    
-    return '';
-}
+	$event_values = array_values($event);
+	$first_event = $event_values[0];
 
+    date_default_timezone_set('Europe/Berlin'); // Set default timezone
+    $output = array();
+
+    if (!empty($first_event) && is_array($first_event) && isset($first_event)) { // Prüfung, ob $event-Array einen Eintrag hat
+        $today = new DateTime();
+        $target_day = new DateTime();
+        $target_day->setTimezone(new DateTimeZone('Europe/Berlin')); // Set timezone explicitly
+        $target_day->setISODate($today->format('Y'), $today->format('W'), array_search($first_event['week_name'], ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) + 1);
+
+        if ($today->format('N') == $target_day->format('N')) {
+            // Target day is today
+            $start = DateTime::createFromFormat('H:i', $first_event['start']);
+            $end = DateTime::createFromFormat('H:i', $first_event['end']); // Neu hinzugefügt
+            if ($today >= $start && $today <= $end) { // Prüfung, ob die aktuelle Zeit zwischen Start- und Endzeit liegt
+                $output['is_bookable'] = false;
+                $output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Kurs läuft</div>';
+            } else if ($today > $end) { // Prüfung, ob die aktuelle Zeit nach der Endzeit liegt
+				var_dump($first_event);
+                $output['is_bookable'] = false;
+                $output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Geschlossen</div>';
+            } else {
+                $output['is_bookable'] = true;
+                $output['status_text'] = 'buchen';
+            }
+        } else {
+            $output['is_bookable'] = true;
+            $output['status_text'] = 'buchen';
+        }
+    } else { // Falls $event-Array keinen Eintrag hat
+		var_dump($event);
+    }
+
+    return $output;
+}
 
 function tt_get_rowspan_value($hour, $array, $rowspan, $measure, $hours_min)
 {

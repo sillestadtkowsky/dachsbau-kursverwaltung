@@ -15,8 +15,8 @@ class TT_DB
 		
 		$query .= 
 		'SELECT 
-			TIME_FORMAT(eh.start, "%%H.%%i") AS start, 
-			TIME_FORMAT(eh.end, "%%H.%%i") AS end, 
+			TIME_FORMAT(eh.start, "%%H:%%i") AS start, 
+			TIME_FORMAT(eh.end, "%%H:%%i") AS end, 
 			eh.before_hour_text AS description_1, 
 			eh.after_hour_text AS description_2, 
 			e.post_title AS event_title,
