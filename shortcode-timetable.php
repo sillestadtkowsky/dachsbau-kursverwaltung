@@ -1309,6 +1309,9 @@ function so_CloseOrOpenBooking($event) {
 	$event_values = array_values($event);
 	$first_event = $event_values[0];
 
+	$kurs_booking_open_time_Option = get_option('so_kurs_booking_open_time');
+	$kurs_close_at_Option = get_option('so_kurs_close_at');
+
     $output = [
         'is_bookable' => true,
         'status_text' => 'komisch'
@@ -1321,20 +1324,19 @@ function so_CloseOrOpenBooking($event) {
 		$today_index = (int)$today->format('N');
 		$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));
 		$end_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['end']));
+
+		$closeCheckerTime = $kurs_close_at_Option == 'so_close_kurs_at_end_time' ? $end_time : $start_time;
 		
 		if ($weekday_index === $today_index) {
-			if ($today > $start_time && $today < $end_time) {
+			if ($today > $closeCheckerTime) {
 				$output['is_bookable'] = false;
-				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Kurs läuft. <br>Keine Buchung mehr möglich.</div>';
-			} else if ($today > $start_time && $today >= $end_time) {
-				$output['is_bookable'] = false;
-				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen 12:00 Uhr</div>';
+				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen ' . $kurs_booking_open_time_Option . ' Uhr</div>';
 			} 
 		} else if ($weekday_index === $today_index - 1) {
 			$todyClone = clone so_getDayBefore(); 
-			if ($yesterday->format('Ymd') === $todyClone->format('Ymd') && $yesterday->format('H:i:s') < '12:00:00') {
+			if ($yesterday->format('Ymd') === $todyClone->format('Ymd') && $yesterday->format('H:i') < $kurs_booking_open_time_Option) {
 				$output['is_bookable'] = false;
-				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen 19:00 Uhr</div>';
+				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen ' . $kurs_booking_open_time_Option . '  Uhr</div>';
 			} 
 		}
 	}
