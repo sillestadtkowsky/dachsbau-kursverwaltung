@@ -1255,54 +1255,6 @@ function so_getDayBefore(){
     return $yesterday;
 }
 
-/*function so_CloseOrOpenBooking($event) {
-	$heute = so_getDayToday();
-	$gestern = so_getDayBefore();
-	$event_values = array_values($event);
-	$first_event = $event_values[0];
-	$output = array();
-	if (!empty($first_event) && is_array($first_event) && isset($first_event)) {
-
-		// Vergleiche den Wochentag des Kurs mit dem aktuellen Wochentag $first_event['week_name']		
-		$previous_weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-		$weekday_index = array_search($first_event['week_name'], $previous_weekdays);
-		$heute_index = $heute->format('N');
-		$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));
-
-		if($weekday_index == $heute_index){
-			// Der Kurs ist heute
-			// hat der Kurs schon begonnen?
-			if($start_time < $heute){
-				// Der Kurs hat schon begonnen
-				$output['is_bookable'] = false;
-				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen 12:00 Uhr</div>';
-			}else {
-				// Der Kurs beginnt noch
-				$output['is_bookable'] = true;
-				$output['status_text'] = 'buchen';
-			}
-		} else if($weekday_index == $heute_index -1 ){
-			// Der Kurs war gestern
-			// ist es schon nach 12 Uhr?
-			if($gestern->format('Ymd') === $heute->modify('-1 day')->format('Ymd') && $gestern->format('H:i:s') < '12:00:00'){
-				// Der Kurs hat die Buchungszeit noch nicht erreicht
-				$output['is_bookable'] = false;
-				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen 19:00 Uhr</div>';
-			}else {
-				// Die Zeit für die Kursbuchung ist ran.
-				$output['is_bookable'] = true;
-				$output['status_text'] = 'buchen';
-			}
-		} else {
-			// Es ist ein Tag, an welchem immer gebucht werden kann
-			$output['is_bookable'] = true;
-			$output['status_text'] = 'buchen';
-		}
-	}
-	return $output;
-}
-*/
-
 function so_CloseOrOpenBooking($event) {
     $today = so_getDayToday();
     $yesterday = so_getDayBefore();
@@ -1311,6 +1263,8 @@ function so_CloseOrOpenBooking($event) {
 
 	$kurs_booking_open_time_Option = get_option('so_kurs_booking_open_time');
 	$kurs_close_at_Option = get_option('so_kurs_close_at');
+	$closed_kurs_names = get_option('so_kurs_names');
+	$kurs_names_description = get_option('so_kurs_names_description');
 
     $output = [
         'is_bookable' => true,
@@ -1318,31 +1272,36 @@ function so_CloseOrOpenBooking($event) {
     ];
     
 	if (!empty($first_event) && is_array($first_event) && isset($first_event)) {
-    
-		$weekday_names = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-		$weekday_index = array_search($first_event['week_name'], $weekday_names);
-		$today_index = (int)$today->format('N');
-		$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));
-		$end_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['end']));
 
-		$closeCheckerTime = $start_time;
-		if($kurs_close_at_Option == 'so_close_kurs_at_15_minutes_before_start_time'){
-			$closeCheckerTime = $start_time->modify('-15 minutes');
-		} else if($kurs_close_at_Option == 'so_close_kurs_at_30_minutes_before_start_time'){
-			$closeCheckerTime = $start_time->modify('-30 minutes');
-		}
-		
-		if ($weekday_index === $today_index) {
-			if ($today > $closeCheckerTime) {
-				$output['is_bookable'] = false;
-				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen ' . $kurs_booking_open_time_Option . ' Uhr</div>';
-			} 
-		} else if ($weekday_index === $today_index - 1) {
-			$todyClone = clone so_getDayBefore(); 
-			if ($yesterday->format('Ymd') === $todyClone->format('Ymd') && $yesterday->format('H:i') < $kurs_booking_open_time_Option) {
-				$output['is_bookable'] = false;
-				$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen ' . $kurs_booking_open_time_Option . '  Uhr</div>';
-			} 
+		if (is_array($closed_kurs_names) && in_array($first_event['title'], $closed_kurs_names)) {
+			$output['is_bookable'] = false;
+			$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">' . $kurs_names_description . '</div>';
+		}else{
+			$weekday_names = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+			$weekday_index = array_search($first_event['week_name'], $weekday_names);
+			$today_index = (int)$today->format('N');
+			$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));
+			$end_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['end']));
+
+			$closeCheckerTime = $start_time;
+			if($kurs_close_at_Option == 'so_close_kurs_at_15_minutes_before_start_time'){
+				$closeCheckerTime = $start_time->modify('-15 minutes');
+			} else if($kurs_close_at_Option == 'so_close_kurs_at_30_minutes_before_start_time'){
+				$closeCheckerTime = $start_time->modify('-30 minutes');
+			}
+			
+			if ($weekday_index === $today_index) {
+				if ($today > $closeCheckerTime) {
+					$output['is_bookable'] = false;
+					$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen ' . $kurs_booking_open_time_Option . ' Uhr</div>';
+				} 
+			} else if ($weekday_index === $today_index - 1) {
+				$todyClone = clone so_getDayBefore(); 
+				if ($yesterday->format('Ymd') === $todyClone->format('Ymd') && $yesterday->format('H:i') < $kurs_booking_open_time_Option) {
+					$output['is_bookable'] = false;
+					$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen ' . $kurs_booking_open_time_Option . '  Uhr</div>';
+				} 
+			}
 		}
 	}
     return $output;
