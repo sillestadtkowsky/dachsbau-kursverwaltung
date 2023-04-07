@@ -1207,7 +1207,7 @@ function so_getDayForWeek($weekday) {
     $today = so_getDayToday();
     $target_day = new DateTime();
     $target_day->setTimezone(new DateTimeZone('Europe/Berlin')); // Set timezone explicitly
-    $target_day->setISODate($today->format('Y'), $today->format('W'), array_search($weekday, ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) + 1);
+    $target_day->setISODate($today->format('Y'), $today->format('W'), array_search(substr($weekday,0,2), ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) + 1);
     
     if ($today->format('N') == $target_day->format('N')) {
         // Target day is today
@@ -1259,7 +1259,7 @@ function so_CloseOrOpenBooking($event) {
 			$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">' . $kurs_names_description . '</div>';
 		}else{
 			$weekday_names = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-			$weekday_index = array_search($first_event['week_name'], $weekday_names);
+			$weekday_index = array_search(substr($first_event['week_name'], 0, 2), $weekday_names);
 			$today_index = (int)$today->format('N');
 			$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));
 			$end_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['end']));
