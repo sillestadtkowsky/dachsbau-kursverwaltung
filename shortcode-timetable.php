@@ -973,6 +973,11 @@ function tt_get_timetable($atts, $event = null)
 								'booking_hover_bg_color' => $booking_hover_bg_color,
 								'booking_label' => $booking_label,
 								'show_booking_button' => $show_booking_button,
+								'start' => $event_hours_tt[$weekday_fixed_number][$i]["start"],
+								'end' => $event_hours_tt[$weekday_fixed_number][$i]["end"],
+								'week_name' => $weekday->post_title,
+								'name' => $event_hours_tt[$weekday_fixed_number][$i]["title"],
+								'title' => $event_hours_tt[$weekday_fixed_number][$i]["title"],
 							));
 						}
 						
@@ -1085,6 +1090,11 @@ function tt_get_row_content($events, $args)
 					'booking_hover_bg_color' => $booking_hover_bg_color,
 					'booking_label' => $booking_label,
 					'show_booking_button' => $show_booking_button,
+					'start' => $startHour,
+					'end' => $endHour,
+					'week_name' => $details["week_name"],
+					'name' => $details["name"],
+					'title' => $details["title"],
 				));
 
 				if($show_available_slots=="always" && $total_slots)
@@ -1177,35 +1187,6 @@ function tt_get_row_content($events, $args)
 				$content .= '</div>' . (end($events)!=$details || (end($events)==$details && $i+1<$hours_count) ? '<hr>' : '');
 		}
 		
-		
-		/*$content .= $class_link;
-		$hours_count = count($details["hours"]);
-		for($i=0; $i<$hours_count; $i++)
-		{
-			if($time_format!="H.i")
-			{
-				$hoursExplode = explode(" - ", $details["hours"][$i]);
-				$details["hours"][$i] = date($time_format, strtotime($hoursExplode[0])) . " - " . date($time_format, strtotime($hoursExplode[1]));
-			}
-			$content .= ($i!=0 ? '<br />' : '');
-			if($details["before_hour_text"][$i]!="")
-				$content .= "<div class='before_hour_text'>" . $details["before_hour_text"][$i] . "</div>";
-			$content .= '<span class="hours"' . ($hours_text_color!="" ? ' style="color:#' . esc_attr($hours_text_color) . ';"' : '') . '>' . $details["hours"][$i] . '</span>';
-			if($details["after_hour_text"][$i]!="")
-				$content .= "<div class='after_hour_text'>" . $details["after_hour_text"][$i] . "</div>";
-			$class_link_tooltip = '<a' . ($hover_text_color!="" ? ' style="color: #' . esc_attr($hover_text_color) . ';"': '') . ' href="' . esc_url($classes_url) . '#' . urldecode($details["name"]) . '" title="' .  esc_attr($key) . '">' . $key . '</a>';
-			$tooltip .= ($tooltip!="" && $details["tooltip"][$i]!="" ? '<br /><br />' : '' ) . ($details["tooltip"][$i]!="" ? $class_link_tooltip : '') . $details["tooltip"][$i];
-		}*/
-		/*if(count($events)==1)
-			$content .= '</div>';
-		if($tooltip!="")
-		{
-			$hover_color = get_post_meta($details["id"], "timetable_hover_color", true);
-			$content .= '<div class="tooltip_text"><div class="tooltip_content"' . ($hover_color!="" || $hover_text_color!="" ? ' style="' . ($hover_color!="" ? 'background-color: #' . esc_attr($hover_color) . ';' : '') . ($hover_text_color!="" ? 'color: #' . esc_attr($hover_text_color) . ';' : '') . '"': '') . '>' . $tooltip . '</div><span class="tooltip_arrow"' . ($hover_color!="" ? ' style="border-color: #' . esc_attr($hover_color) . ' transparent;"' : '') . '></span></div>';	
-		}
-		
-		if(count($events)>1)
-			$content .= '</div>' . (end($events)!=$details ? '<hr>' : '');*/
 	}
 	return $content;
 }
@@ -1299,8 +1280,11 @@ function so_CloseOrOpenBooking($event) {
 				$todyClone = clone so_getDayBefore(); 
 				if ($yesterday->format('Ymd') === $todyClone->format('Ymd') && $yesterday->format('H:i') < $kurs_booking_open_time_Option) {
 					$output['is_bookable'] = false;
-					$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen ' . $kurs_booking_open_time_Option . '  Uhr</div>';
-				} 
+					$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab heute ' . $kurs_booking_open_time_Option . '  Uhr</div>';
+				//} else if ($yesterday->format('Ymd') === $todyClone->format('Ymd') && $yesterday->format('H:i') >= $kurs_booking_open_time_Option && $today->format('Ymd') !== $todyClone->format('Ymd')) {
+				//	$output['is_bookable'] = false;
+				//	$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab heute ' . $kurs_booking_open_time_Option . '  Uhr</div>';
+				}
 			}
 		}
 	}
@@ -2386,6 +2370,11 @@ function timetable_prepare_booking_button($args)
 		'current_user_booking_count' => '',
 		'slots_per_user' => '',
 		'available_slots' => '',
+		'start' => '',
+		'end' => '',
+		'week_name' => '',
+		'name' => '',
+		'title' => '',
 	), $args);
 	
 	
@@ -2404,7 +2393,25 @@ function timetable_prepare_booking_button($args)
 	}
 	else
 	{
-		$output .= "<a href='" . esc_url($booking_url) . "' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " " . ($args['redirect']=='yes' ? 'redirect' : '') . " ' data-event-hour-id='" . esc_attr($args['event_hours_id']) . "' style='" . (strlen($args['booking_text_color']) ? " color: #" . esc_attr($args['booking_text_color']) . " !important;" : "") . (strlen($args['booking_bg_color']) ? " background-color: #" . esc_attr($args['booking_bg_color']) . ";" : "") . "' onMouseOver='" . (strlen($args['booking_hover_text_color']) ? " this.style.setProperty(\"color\", \"#" . esc_attr($args['booking_hover_text_color']) . "\", \"important\");" : "") . (strlen($args['booking_hover_bg_color']) ? " this.style.setProperty(\"background\", \"#" . esc_attr($args['booking_hover_bg_color']) . "\", \"important\");" : "") . "' onMouseOut='" . (strlen($args['booking_hover_text_color']) ? (strlen($args['booking_hover_text_color']) ? " this.style.setProperty(\"color\", \"#" . esc_attr($args['booking_text_color']) . "\", \"important\");" : " this.style.color=\"\";") : "") . (strlen($args['booking_hover_bg_color']) ? (strlen($args['booking_hover_bg_color']) ? " this.style.setProperty(\"background\", \"#" . esc_attr($args['booking_bg_color']) . "\", \"important\");" : " this.style.background=\"\";") : "") . "' title='" . esc_attr($args['booking_label']) . "'>" . $args['booking_label'] . "</a>";
+		if($args['week_name']=='Do'){
+			echo 'Do';
+		}
+		$event = array($args);
+
+		$booking_status = so_CloseOrOpenBooking($event);
+
+		// Greife auf den Boolean-Wert zu
+		$is_bookable = $booking_status['is_bookable'];
+
+		// Greife auf den Text zu
+		$status_text = $booking_status['status_text'];
+
+		// Gib eine Meldung aus, abhängig vom Boolean-Wert
+		if ($is_bookable) {
+			$output .= "<a href='" . esc_url($booking_url) . "' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " " . ($args['redirect']=='yes' ? 'redirect' : '') . " ' data-event-hour-id='" . esc_attr($args['event_hours_id']) . "' style='" . (strlen($args['booking_text_color']) ? " color: #" . esc_attr($args['booking_text_color']) . " !important;" : "") . (strlen($args['booking_bg_color']) ? " background-color: #" . esc_attr($args['booking_bg_color']) . ";" : "") . "' onMouseOver='" . (strlen($args['booking_hover_text_color']) ? " this.style.setProperty(\"color\", \"#" . esc_attr($args['booking_hover_text_color']) . "\", \"important\");" : "") . (strlen($args['booking_hover_bg_color']) ? " this.style.setProperty(\"background\", \"#" . esc_attr($args['booking_hover_bg_color']) . "\", \"important\");" : "") . "' onMouseOut='" . (strlen($args['booking_hover_text_color']) ? (strlen($args['booking_hover_text_color']) ? " this.style.setProperty(\"color\", \"#" . esc_attr($args['booking_text_color']) . "\", \"important\");" : " this.style.color=\"\";") : "") . (strlen($args['booking_hover_bg_color']) ? (strlen($args['booking_hover_bg_color']) ? " this.style.setProperty(\"background\", \"#" . esc_attr($args['booking_bg_color']) . "\", \"important\");" : " this.style.background=\"\";") : "") . "' title='" . esc_attr($args['booking_label']) . "'>" . $args['booking_label'] . "</a>";
+		} else {
+			$output .= $status_text;
+		}
 	}
 	
 	$output = "<div class='event_hour_booking_wrapper " . esc_attr($args['show_booking_button']) . "'>" . $output . "</div>";
