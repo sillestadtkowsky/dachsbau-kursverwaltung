@@ -1254,7 +1254,7 @@ function so_CloseOrOpenBooking($event) {
     
 	if (!empty($first_event) && is_array($first_event) && isset($first_event)) {
 
-		if (is_array($closed_kurs_names) && in_array($first_event['title'], $closed_kurs_names)) {
+		if (is_array($closed_kurs_names) && in_array($first_event['name'], $closed_kurs_names)) {
 			$output['is_bookable'] = false;
 			$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">' . $kurs_names_description . '</div>';
 		}else{
