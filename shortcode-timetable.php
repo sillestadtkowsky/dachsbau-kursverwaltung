@@ -583,7 +583,7 @@ function tt_get_timetable($atts, $event = null)
 	}
 	
 	//get weekdays
-	$query = "SELECT post_title, menu_order FROM {$wpdb->posts}
+	$query = "SELECT post_title, post_name, menu_order FROM {$wpdb->posts}
 			WHERE 
 			post_type='timetable_weekdays'
 			AND post_status='publish'";
@@ -624,6 +624,9 @@ function tt_get_timetable($atts, $event = null)
 	
 	if(!(int)$desktop_list_view)
 	{
+		$kurs_online_name_color_background = get_option( 'so_kurs_online_name_color_background' );
+		$kurs_online_name_color_text = get_option( 'so_kurs_online_name_color_text' );
+		$so_kurs_online_search_name = get_option( 'so_kurs_online_search_name' );
 		$output .= '<table class="tt_timetable">
 					<thead>
 						<tr class="row_gray"' . ($row1_color!="" ? ' style="background-color: ' . ($row1_color!="transparent" ? '#' : '') . esc_attr($row1_color) . ' !important;"' : '') . '>';
@@ -632,7 +635,14 @@ function tt_get_timetable($atts, $event = null)
 
 		foreach($weekdays as $weekday)
 		{
-			$output .= '	<th>' . $weekday->post_title . '</th>';
+			// Überprüfe, ob das Wort "online" im post_name enthalten ist
+			if (strpos($weekday->post_name, $so_kurs_online_search_name) !== false) {
+				// Das Wort "online" wurde gefunden
+				$output .= '<th title="Achtung! Kurs findet ONLINE statt!" class="tooltip" style="background-color: ' . $kurs_online_name_color_background . '; color: ' . $kurs_online_name_color_text . ';">' . $weekday->post_title . '</th>';
+			} else {
+				// Das Wort "online" wurde nicht gefunden
+				$output .= '	<th>' . $weekday->post_title . '</th>';
+			}
 		}
 		$output .= '	</tr>
 					</thead>
