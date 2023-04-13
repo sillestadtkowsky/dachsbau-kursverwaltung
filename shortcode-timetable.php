@@ -1256,6 +1256,9 @@ function so_CloseOrOpenBooking($event) {
 	$kurs_close_at_Option = get_option('so_kurs_close_at');
 	$closed_kurs_names = get_option('so_kurs_names');
 	$kurs_names_description = get_option('so_kurs_names_description');
+	$kurs_names_with_mail = get_option('so_kurs_strong_group_mail');
+	$kurs_names_mail_adresse = get_option('so_kurs_strong_group_mail_adresse');
+	$stronGroupeMessage = '';
 
     $output = [
         'is_bookable' => true,
@@ -1266,7 +1269,14 @@ function so_CloseOrOpenBooking($event) {
 
 		if (is_array($closed_kurs_names) && in_array($first_event['name'], $closed_kurs_names)) {
 			$output['is_bookable'] = false;
-			$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">' . $kurs_names_description . '</div>';
+			$stronGroupeMessage = '<div style="padding:5px; background-color:lightgrey; color: black;">' . $kurs_names_description;
+
+			if($kurs_names_with_mail =='1'){
+				$stronGroupeMessage .= '<br><a style="color: black !important;" href="mailto:' . $kurs_names_mail_adresse . '">Anfrage</a>';
+			}
+
+			$stronGroupeMessage .= '</div>';
+			$output['status_text']  = $stronGroupeMessage;
 		}else{
 			$weekday_names = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 			$weekday_index = array_search(substr($first_event['week_name'], 0, 2), $weekday_names);

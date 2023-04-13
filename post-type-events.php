@@ -157,8 +157,10 @@ function timetable_events_init()
 		//create custom db table
 		$query = "CREATE TABLE IF NOT EXISTS `" . $wpdb->prefix . "event_booking_saves` (
 			`booking_id` BIGINT( 20 ) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+			`email` VARCHAR(120),
+			`mitgliedsnummer` VARCHAR(10),
 			`event_hours_id` BIGINT( 20 ) UNSIGNED NOT NULL,
-			`user_id` BIGINT( 20 ) UNSIGNED NOT NULL DEFAULT 0,
+			`name` VARCHAR(120),
 			`booking_datetime` DATETIME NOT NULL,
 			`booking_delete_datetime` DATETIME NOT NULL
 		) ENGINE = MYISAM DEFAULT CHARSET=utf8;";
