@@ -1278,9 +1278,9 @@ function so_CloseOrOpenBooking($event) {
 			$stronGroupeMessage .= '</div>';
 			$output['status_text']  = $stronGroupeMessage;
 		}else{
-			$weekday_names = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+			$weekday_names = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa','So'];
 			$weekday_index = array_search(substr($first_event['week_name'], 0, 2), $weekday_names);
-			$today_index = (int)$today->format('N');
+			$today_index = (int)$today->format('N') - 1;
 			$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));
 			$end_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['end']));
 
