@@ -1279,7 +1279,8 @@ function so_CloseOrOpenBooking($event) {
 			$output['status_text']  = $stronGroupeMessage;
 		}else{
 			$weekday_names = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa','So'];
-			$weekday_index = array_search(substr($first_event['week_name'], 0, 2), $weekday_names);
+			$weekday_clean = substr($first_event['week_name'], 0, 2);
+			$weekday_index = array_search($weekday_clean, $weekday_names);
 			$today_index = (int)$today->format('N') - 1;
 			$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));
 			$end_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['end']));
@@ -1296,7 +1297,7 @@ function so_CloseOrOpenBooking($event) {
 					$output['is_bookable'] = false;
 					$output['status_text'] = '<div style="padding:5px; background-color:lightgrey; color: black;">Buchung ab morgen ' . $kurs_booking_open_time_Option . ' Uhr</div>';
 				} 
-			} else if ($weekday_index === $today_index - 1) {
+			} else if ($weekday_index === getPrevIndex($today_index)) {
 				$todyClone = clone so_getDayBefore(); 
 				if ($yesterday->format('Ymd') === $todyClone->format('Ymd') && $yesterday->format('H:i') < $kurs_booking_open_time_Option) {
 					$output['is_bookable'] = false;
@@ -1309,6 +1310,15 @@ function so_CloseOrOpenBooking($event) {
 		}
 	}
     return $output;
+}
+
+function getPrevIndex($index){
+	if ($index===0){
+		// es ist Montag und der index wird auf Sonntag gesetzt.
+		return 6;
+	}else{
+		return $index - 1;
+	}
 }
 
 function tt_get_rowspan_value($hour, $array, $rowspan, $measure, $hours_min)
