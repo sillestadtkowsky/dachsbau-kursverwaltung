@@ -5,7 +5,7 @@ Plugin URI: https://1.envato.market/timetable-responsive-schedule-for-wordpress
 Description: "Kursverwaltung für den Dachsbau" ist ein leistungsstarkes und benutzerfreundliches Zeitplan-Plugin für WordPress. Es hilft Ihnen, in wenigen Minuten eine Zeitplanansicht Ihrer Veranstaltungen zu erstellen. Es ist perfekt für Sportunterricht, Schul- oder Kindergartenklassen, medizinische Abteilungen, Nachtclubs, Unterrichtspläne, Essenspläne usw. Es wird mit einem Veranstaltungsmanager, einem Shortcode für Veranstaltungsereignisse, einem Timetable Shortcode Generator und einem Widget für bevorstehende Veranstaltungen geliefert.
 Author: QuanticaLabs (edit by Silvio Osowsky)
 Author URI: https://1.envato.market/quanticalabs-portfolio-codecanyon
-Version: 7.2.8
+Version: 7.3.1
 */
 
 //translation
@@ -829,6 +829,7 @@ if(is_admin())
 		));
 		$booking_details = $bookings[0];
 		$slots_number = count($bookings);
+		$map_link = get_post_meta($booking_details['weekday_id'], 'map_link', true);
 		
 		$values = array(
 			'booking_id' => $booking_details['booking_id'],
@@ -848,6 +849,7 @@ if(is_admin())
 			'guest_email' => $booking_details['guest_email'],
 			'guest_phone' => $booking_details['guest_phone'],
 			'guest_message' => $booking_details['guest_message'],
+			'map_link' => $map_link,
 		);
 		
 		$values = timetable_stripslashes_deep($values);
@@ -915,6 +917,7 @@ if(is_admin())
 		$body = str_replace('{user_email}', $user_email, $body);
 		$body = str_replace('{user_phone}', $user_phone, $body);
 		$body = str_replace('{user_message}', nl2br($user_message), $body);
+		$body = str_replace('{map_link}', $values['map_link'] , $body);
 		$body = str_replace('{cancel_booking}', $cancel_booking, $body);
 		
 		$result['error'] = !(int)wp_mail($user_name . ' <' . $user_email . '>', $subject, $body, $headers);

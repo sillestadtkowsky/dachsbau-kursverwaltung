@@ -86,6 +86,7 @@ class TT_DB
 		$query .= 
 		'SELECT 
 			booking.booking_id AS booking_id,
+			event_hour.weekday_id AS weekday_id,
 			booking.booking_datetime AS booking_datetime,
 			booking.validation_code,
 			event.ID AS event_id, 
