@@ -21,6 +21,7 @@ class TT_DB
 			eh.after_hour_text AS description_2, 
 			e.post_title AS event_title,
 			w.post_title AS column_title,
+			w.post_name AS column_name,
 			COUNT(ehb.booking_id) AS booking_count, 
 			eh.available_places,
 			eh.slots_per_user,
@@ -262,20 +263,22 @@ class TT_DB
 			'user_id' => 0,
 			'booking_date' => '',
 			'guest_id' => 0,
-			'validation_code' => ''
+			'validation_code' => '',
+			'eventDate'  => '',
 		), $args);
 		
 		global $wpdb;
 		$query = '';
 		$queryArgs = array();
 		
-		$query = 'INSERT INTO ' . $wpdb->prefix . 'event_hours_booking(event_hours_id, user_id, booking_datetime, validation_code, guest_id) 
-				VALUES (%d, %d, %s, %s, %d)';
+		$query = 'INSERT INTO ' . $wpdb->prefix . 'event_hours_booking(event_hours_id, user_id, booking_datetime, validation_code, guest_id, eventDate) 
+				VALUES (%d, %d, %s, %s, %d, %s)';
 		$queryArgs[] = $args['event_hour_id'];
 		$queryArgs[] = $args['user_id'];
 		$queryArgs[] = $args['booking_date'];
 		$queryArgs[] = $args['validation_code'];
 		$queryArgs[] = $args['guest_id'];
+		$queryArgs[] = $args['eventDate'];
 		
 		$query = $wpdb->prepare($query, $queryArgs);
 		$wpdb->query($query);

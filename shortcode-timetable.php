@@ -962,7 +962,7 @@ function tt_get_timetable($atts, $event = null)
 						
 						# pragma Section name (Datum für responsive mode setzten)
 						$output .= '<div class="value">
-									<span class="start-hour" ' . $hours_text_colors_html . '><div><span style="padding-bottom:5px; font-weight:bold;">' . so_getDayForWeek($weekday->post_title) . '</span></div>' . $event_hours_tt[$weekday_fixed_number][$i]["start"] . '</span><span class="hour-separator" ' . $hours_text_colors_html . '> - </span><span class="end-hour" ' . $hours_text_colors_html . '>' . $event_hours_tt[$weekday_fixed_number][$i]["end"] . "</span>";
+									<span class="start-hour" ' . $hours_text_colors_html . '><div><span style="padding-bottom:5px; font-weight:bold;">' . TT_Weekday::so_getDayForWeek($weekday->post_title) . '</span></div>' . $event_hours_tt[$weekday_fixed_number][$i]["start"] . '</span><span class="hour-separator" ' . $hours_text_colors_html . '> - </span><span class="end-hour" ' . $hours_text_colors_html . '>' . $event_hours_tt[$weekday_fixed_number][$i]["end"] . "</span>";
 						
 						if($show_booking_button!="no")
 						{
@@ -1126,14 +1126,14 @@ function tt_get_row_content($events, $args)
 			{
 				$content .= $class_link;
 				$content .= $description1_content;
-				$content .= '<div style="padding-top:5px;">am<br><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
+				$content .= '<div style="padding-top:5px;">am<br><span>' . TT_Weekday::so_getDayForWeek($details["week_name"]) . '</span></div>';
 				$content .= $top_hour_content;
 				$content .= $bottom_hour_content;
 				$content .= $description2_content;
 			}
 			else if((int)$event_layout==2)
 			{
-				$content .= '<div style="padding-top:5px;">am<br><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
+				$content .= '<div style="padding-top:5px;">am<br><span>' . TT_Weekday::so_getDayForWeek($details["week_name"]) . '</span></div>';
 				$content .= $top_hour_content;
 				$content .= $bottom_hour_content;
 				$content .= $description1_content;
@@ -1144,7 +1144,7 @@ function tt_get_row_content($events, $args)
 			{
 				$content .= $class_link;
 				$content .= $description1_content;
-				$content .= '<div style="padding-top:5px;">am<br><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
+				$content .= '<div style="padding-top:5px;">am<br><span>' . TT_Weekday::so_getDayForWeek($details["week_name"]) . '</span></div>';
 				$content .= $hours_content;
 				$content .= $description2_content;
 			}
@@ -1152,7 +1152,7 @@ function tt_get_row_content($events, $args)
 			{
 				$content .= $class_link;
 				$content .= $description1_content;
-				$content .= '<div style="padding-top:5px;">am<br><span>' . so_getDayForWeek($details["week_name"]) . '</span></div>';
+				$content .= '<div style="padding-top:5px;">am<br><span>' . TT_Weekday::so_getDayForWeek($details["week_name"]) . '</span></div>';
 				$content .= $top_hour_content;
 				$content .= $description2_content;
 			}
@@ -1201,39 +1201,6 @@ function tt_get_row_content($events, $args)
 	return $content;
 }
 
-/*
-*
-* @autor Silvio Osowsky
-* Die Funktion so_getDayForWeek erhält als Parameter einen Wochentag in der Form eines zweistelligen Strings, z.B. "Mo" für Montag oder "Di" für Dienstag. 
-* Die Funktion berechnet dann das Datum des nächsten Auftretens dieses Wochentags ausgehend vom aktuellen Datum und gibt dieses im Format "TT.MM.JJJJ" zurück.
-* Zunächst wird die Zeitzone auf "Europe/Berlin" gesetzt und dann ein DateTime-Objekt für das aktuelle Datum und eins für das Ziel-Datum erstellt. 
-* Das Ziel-Datum wird mithilfe der setISODate()-Methode gesetzt, die Jahr, Woche und Wochentag annimmt und das Datum des entsprechenden Tages zurückgibt.
-* Anschließend wird geprüft, ob das Ziel-Datum heute ist und falls ja, wird das aktuelle Datum im Format "TT.MM.JJJJ" zurückgegeben. 
-* Falls das Ziel-Datum noch in dieser Woche liegt, wird das Datum des Ziel-Tages im Format "TT.MM.JJJJ" zurückgegeben.
-* Wenn der Ziel-Tag bereits in dieser Woche vorbei ist, wird das Datum des Ziel-Tages in der nächsten Woche zurückgegeben
-*
-*/
-function so_getDayForWeek($weekday) {   
-    $today = so_getDayToday();
-    $target_day = new DateTime();
-    $target_day->setTimezone(new DateTimeZone('Europe/Berlin')); // Set timezone explicitly
-    $target_day->setISODate($today->format('Y'), $today->format('W'), array_search(substr($weekday,0,2), ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']) + 1);
-    
-    if ($today->format('N') == $target_day->format('N')) {
-        // Target day is today
-        $next_date = $today->format('d.m.Y');
-    } elseif ($today->format('N') < $target_day->format('N')) {
-        // Target day is still in the current week
-        $next_date = $target_day->format('d.m.Y');
-    } else {
-        // Target day has already passed in the current week, get the date for next week
-        $target_day->modify('+1 week');
-        $next_date = $target_day->format('d.m.Y');
-    }
-    
-    return $next_date;
-}
-
 function so_getDayToday(){
 	date_default_timezone_set('Europe/Berlin'); // Set default timezone
     $today = new DateTime();
@@ -1265,7 +1232,7 @@ function so_CloseOrOpenBooking($event) {
         'status_text' => 'komisch'
     ];
     
-	if (!empty($first_event) && is_array($first_event) && isset($first_event)) {
+	if (!empty($first_event) && is_array($first_event) && isset($first_event) && !empty($first_event['start'])) {
 
 		if (is_array($closed_kurs_names) && in_array($first_event['name'], $closed_kurs_names)) {
 			$output['is_bookable'] = false;
@@ -1278,8 +1245,8 @@ function so_CloseOrOpenBooking($event) {
 			$stronGroupeMessage .= '</div>';
 			$output['status_text']  = $stronGroupeMessage;
 		}else{
-			$weekday_names = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa','So'];
-			$weekday_clean = substr($first_event['week_name'], 0, 2);
+			$weekday_names = ['mo', 'di', 'mi', 'do', 'fr', 'sa','so'];
+			$weekday_clean = substr(strtolower($first_event['week_name']), 0, 2);
 			$weekday_index = array_search($weekday_clean, $weekday_names);
 			$today_index = (int)$today->format('N') - 1;
 			$start_time = DateTime::createFromFormat('H:i', str_replace('.', ':', $first_event['start']));

@@ -734,13 +734,24 @@ if(is_admin())
 		$booking_date = date_i18n('Y-m-d H:i:s');
 		for($i=0; $i<$slots_number; $i++)
 		{
-			$validation_code = md5(strval(time()+$event_hour_id+$user_id+mt_rand()*$i).timetable_random_string());			
+			$validation_code = md5(strval(time()+$event_hour_id+$user_id+mt_rand()*$i).timetable_random_string());	
+			
+			$hour_details = TT_DB::getEventHours(array(
+				'event_hours_id' => $event_hour_id,
+			));
+
+			$eventDate = TT_Weekday::so_getDayForWeek($hour_details[0]->column_name);
+
+			$dateTime = date_create_from_format('d.m.Y', $eventDate);
+			$sqlDateString = $dateTime->format('Y-m-d');
+
 			$bookings_ids[] = TT_DB::createBooking(array(
 				'event_hour_id' => $event_hour_id,
 				'user_id' => $user_id,
 				'booking_date' => $booking_date,
 				'guest_id' => $guest_id,
 				'validation_code' => $validation_code,
+				'eventDate' => $sqlDateString,
 			));
 		}
 		
