@@ -106,7 +106,8 @@ class TT_DB
 			guest.name AS guest_name,
 			guest.email AS guest_email,
 			guest.phone AS guest_phone,
-			guest.message AS guest_message
+			guest.message AS guest_message,
+			booking.eventDate AS eventDate
 		FROM 
 			' . $wpdb->prefix . 'event_hours_booking AS booking
 		LEFT JOIN 

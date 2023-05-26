@@ -860,6 +860,7 @@ if(is_admin())
 			'guest_email' => $booking_details['guest_email'],
 			'guest_phone' => $booking_details['guest_phone'],
 			'guest_message' => $booking_details['guest_message'],
+			'eventDate' => $booking_details['eventDate'],
 			'map_link' => $map_link,
 		);
 		
@@ -890,10 +891,10 @@ if(is_admin())
 		{
 			$booking_ids[] = (int)$booking['booking_id'];
 			$validation_codes[] = $booking['validation_code'];
-			$cancel_booking .= '<a href="' . esc_url(get_site_url() . '?action=timetable_cancel_booking&booking_id=' . $booking['booking_id'] . '&validation_code=' . $booking['validation_code']) . '">' . sprintf(esc_html__('Cancel booking #%d', 'timetable'), $booking['booking_id']) . '</a><br>';
+			$cancel_booking .= '<a href="' . esc_url(get_site_url() . '?action=timetable_cancel_booking&booking_id=' . $booking['booking_id'] . '&validation_code=' . $booking['validation_code']) . '">' . sprintf(esc_html__('Buchung stornieren: #%d', 'timetable'), $booking['booking_id']) . '</a><br>';
 		}
 		if(count($bookings)>1)
-			$cancel_booking .= '<a href="' . esc_url(get_site_url() . '?action=timetable_cancel_booking&bookings_ids=' . implode(',', $booking_ids) . '&validation_codes=' . implode(',', $validation_codes)) . '">' . esc_html__('Cancel all bookings', 'timetable') . '</a><br>';
+			$cancel_booking .= '<a href="' . esc_url(get_site_url() . '?action=timetable_cancel_booking&bookings_ids=' . implode(',', $booking_ids) . '&validation_codes=' . implode(',', $validation_codes)) . '">' . esc_html__('Alle Buchungen stornieren', 'timetable') . '</a><br>';
 		
 		//SEND EMAIL TO CLIENT
 		$headers = array();
@@ -929,6 +930,10 @@ if(is_admin())
 		$body = str_replace('{user_phone}', $user_phone, $body);
 		$body = str_replace('{user_message}', nl2br($user_message), $body);
 		$body = str_replace('{map_link}', $values['map_link'] , $body);
+		if (!empty($values['eventDate'])) {
+			$formattedEventDate = date('d.m.Y', strtotime($values['eventDate']));
+			$body = str_replace('{eventDate}', $formattedEventDate, $body);	
+		}
 		$body = str_replace('{cancel_booking}', $cancel_booking, $body);
 		
 		$result['error'] = !(int)wp_mail($user_name . ' <' . $user_email . '>', $subject, $body, $headers);

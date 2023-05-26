@@ -205,7 +205,7 @@
 						<td colspan="3">
 							<?php esc_html_e("Available placeholders:", 'timetable'); ?>
 							<br />
-							<strong>{event_title} {column_title} {event_start} {event_end} {event_description_1} {event_description_2} {slots_number} {booking_datetime} {user_name} {user_email} {user_phone} {user_message} {cancel_booking}</strong>
+							<strong>{event_title} {column_title} {event_start} {event_end} {event_description_1} {event_description_2} {slots_number} {booking_datetime} {user_name} {user_email} {user_phone} {user_message} {cancel_booking} {eventDate} {map_link}</strong>
 						</td>
 					</tr>
 					<tr valign="top">
