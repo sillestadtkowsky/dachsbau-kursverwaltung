@@ -39,7 +39,7 @@ class TT_Weekday extends TT_Post
 		date_default_timezone_set('Europe/Berlin');
 		$today = so_getDayToday();
 		$target_day = so_getDayToday();
-		$target_day->setISODate($today->format('Y'), $today->format('W'), array_search(substr($weekDayLower,0,2), ['mo', 'di', 'mi', 'do', 'rr', 'sa', 'so']) + 1);
+		$target_day->setISODate($today->format('Y'), $today->format('W'), array_search(substr($weekDayLower,0,2), ['mo', 'di', 'mi', 'do', 'fr', 'sa', 'so']) + 1);
 		
 		if ($today->format('N') == $target_day->format('N')) {
 			// Target day is today
