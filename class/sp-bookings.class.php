@@ -15,7 +15,7 @@ class SP_Bookings
 	
 	public function __construct()
 	{
-		add_filter('set-screen-option', array(__CLASS__, 'set_screen'), 10, 3);
+		add_filter('set-screen-option', array(__CLASS__, 'set_screen'), 1, 3);
 		add_action('admin_menu', array($this, 'plugin_menu'));
 		add_action('wp_loaded', array($this, 'handle_booking_export'));
 	}
@@ -27,10 +27,8 @@ class SP_Bookings
 	
 	public function plugin_menu()
 	{
-		$admin_booking_hook = add_menu_page(esc_html__('Timetable Bookings', 'timetable'), esc_html__('Timetable Bookings', 'timetable'), 'manage_options', 'timetable_admin_bookings', array($this, 'bookings_page'), '', 20);
+		$admin_booking_hook = add_menu_page('Trainer Kursexport', 'Trainer Kursexport', 'read', 'timetable_coach_bookings_export', array($this, 'bookings_export_page'));
 		add_action('load-' . $admin_booking_hook, array($this, 'screen_option'));
-		add_submenu_page('timetable_admin_bookings', esc_html__('Export Bookings', 'timetable'), esc_html__('Export Bookings', 'timetable'), 'manage_options', 'timetable_admin_bookings_export', array($this, 'bookings_export_page'));
-		add_submenu_page('timetable_admin_bookings', esc_html__('Trainer Export', 'timetable'), esc_html__('Trainer Export', 'timetable'), 'read', 'timetable_coach_bookings_export', array($this, 'bookings_export_page'));
 	}
 	
 	public function screen_option()
@@ -63,7 +61,7 @@ class SP_Bookings
 		<?php
 	}
 
-	public function bookings_export_page()
+	public static function bookings_export_page()
 	{
 		//fetch a list of events
 		$timetable_events_settings = timetable_events_settings();

@@ -5,7 +5,7 @@ Plugin URI: https://1.envato.market/timetable-responsive-schedule-for-wordpress
 Description: "Kursverwaltung für den Dachsbau" ist ein leistungsstarkes und benutzerfreundliches Zeitplan-Plugin für WordPress. Es hilft Ihnen, in wenigen Minuten eine Zeitplanansicht Ihrer Veranstaltungen zu erstellen. Es ist perfekt für Sportunterricht, Schul- oder Kindergartenklassen, medizinische Abteilungen, Nachtclubs, Unterrichtspläne, Essenspläne usw. Es wird mit einem Veranstaltungsmanager, einem Shortcode für Veranstaltungsereignisse, einem Timetable Shortcode Generator und einem Widget für bevorstehende Veranstaltungen geliefert.
 Author: QuanticaLabs (edit by Silvio Osowsky)
 Author URI: https://1.envato.market/quanticalabs-portfolio-codecanyon
-Version: 7.3.6
+Version: 7.3.9
 */
 
 //translation
@@ -151,10 +151,26 @@ function timetable_cancel_booking()
 					'booking_id' => $bookings_ids[$i],
 					'validation_code' => $validation_codes[$i],
 				));
-				if(isset($result[0]['booking_id']) && $result[0]['booking_id']==$bookings_ids[$i])
+				if(isset($result[0]['booking_id']) && $result[0]['booking_id']==$bookings_ids[$i]){
 					$bookings[] = $result[0];
-				else
-					echo '<b>' . sprintf(esc_html__('Error: Booking #%d does not exist or validation code is incorrect.', 'timetable'), $bookings_ids[$i]) . '</b><br>';
+				}else{
+					echo '<style>
+						.error-storno{
+							display: grid;
+							position: inline;
+							justify-content: center;
+							align-items: flex-start;
+							text-align: center;
+							margin:20px;
+							padding:10px;
+							background-color:#ff2600;
+							color:white;}
+						.error-storno p{
+							font-size:1.2em;}
+						</style>';
+					echo '<div class="error-storno"><p><strong>' . sprintf(esc_html__('Uppsss...', 'timetable'), $bookings_ids[$i]) . '</strong></p><br>';
+					echo '<p><strong>' . sprintf(esc_html__('Die Buchung mit der Nummer #%d existiert leider in unserem System nicht.', 'timetable'), $bookings_ids[$i]) . '<strong></p><br></div>';
+				}
 			}
 		}
 	}
@@ -167,18 +183,35 @@ function timetable_cancel_booking()
 		//delete booking
 		TT_DB::deleteBooking($booking['booking_id']);
 		//display booking information
-		echo '<b>' . sprintf(esc_html__('Booking #%d (%s) deleted', 'timetable'), $booking['booking_id'], $booking['booking_datetime']) . '</b><br>';		
-		echo sprintf(esc_html__('Title: %s', 'timetable'), $booking['event_title']) . '<br>';
-		echo sprintf(esc_html__('Time: %s', 'timetable'), $booking['start'] . '-' . $booking['end']) . '<br>';
-		echo sprintf(esc_html__('Column: %s', 'timetable'), $booking['weekday']) . '<br>';
+		echo '<style>
+			.success-storno{
+				display: grid;
+				position: inline;
+				justify-content: center;
+				align-items: flex-start;
+				text-align: center;
+				margin:20px;
+				padding:10px;
+				background-color:#00A27C;
+				color:white;}
+			.success-storno p{
+				font-size:1.2em;}
+			</style>';
+		echo '<div class="success-storno"><b>' . sprintf(esc_html__('Deine Buchung #%d (%s) wurde storniert.', 'timetable'), $booking['booking_id'], $booking['booking_datetime']) . '</b><br>';		
+		echo sprintf(esc_html__('Kursname: %s', 'timetable'), $booking['event_title']) . '<br>';
+		$eventDate = $booking['eventDate'];
+		$formattedDate = date('d.m.Y', strtotime($eventDate));
+		echo sprintf(esc_html__('Datum: %s', 'timetable'), $formattedDate) . '<br>';
+		echo sprintf(esc_html__('Uhrzeit: %s', 'timetable'), $booking['start'] . '-' . $booking['end']) . '<br>';
+		echo sprintf(esc_html__('Ort: %s', 'timetable'), $booking['weekday']) . '<br>';
 		if($booking['event_description_1'])
-			echo sprintf(esc_html__('Description 1: %s', 'timetable'), $booking['event_description_1']) . '<br>';
+			echo sprintf(esc_html__('Hinweis 1: %s', 'timetable'), $booking['event_description_1']) . '<br>';
 		if($booking['event_description_2'])
-			echo sprintf(esc_html__('Description 2: %s', 'timetable'), $booking['event_description_2']) . '<br>';
-		echo '<br>';
+			echo sprintf(esc_html__('Hinweis 2: %s', 'timetable'), $booking['event_description_2']) . '<br>';
+		echo '</div><br>';
 	}
-	
-	//send email to administrator
+
+	//send email to client
 	$timetable_contact_form_options = timetable_stripslashes_deep(get_option("timetable_contact_form_options"));
 	$admin_name = $timetable_contact_form_options['admin_name'];
 	$admin_email = $timetable_contact_form_options['admin_email'];
@@ -200,35 +233,40 @@ function timetable_cancel_booking()
 	}
 	
 	$headers = array();
-	$headers[] = 'Reply-To: ' . $client_name . ' <' . $client_email . '>' . "\r\n";
+	$headers[] = 'to: ' . $client_name . ' <' . $client_email . '>' . "\r\n";
 	$headers[] = 'From: ' . (!empty($admin_name_from) ? $admin_name_from : $admin_name) . ' <' . (!empty($admin_email_from) ? $admin_email_from : $admin_email) . '>' . "\r\n";
 	$headers[] = 'Content-type: text/html';
-	$subject = esc_html__('Bookings canceled', 'timetable');
+	$subject = esc_html__('Deine Stornierungsbestätigung', 'timetable');
 	$body = '';
 	
-	$body .= '<h3>' . esc_html__('Client details', 'timetable') . '</h3>';
+	$body .= '<h3>' . esc_html__('Deine Stornierungsbestätigung', 'timetable') . '</h3>';
 	$body .= sprintf(esc_html__('Name: %s', 'timetable'), $client_name) . '<br>';
 	$body .= sprintf(esc_html__('Email: %s', 'timetable'), $client_email) . '<br>';
 	if($client_phone)
 		$body .= sprintf(esc_html__('Phone: %s', 'timetable'), $client_phone) . '<br>';
 	$body .= '<br>';
-	$body .= '<h3>' . esc_html__('Canceled Bookings', 'timetable') . '</h3>';
+	$body .= '<h3>' . esc_html__('Deine Kursbuchung wurde storniert.', 'timetable') . '</h3>';
 	foreach($bookings as $booking)
 	{
-		$body .= sprintf(esc_html__('Booking: #%d (%s)', 'timetable'), $booking['booking_id'], $booking['booking_datetime']) . '<br>';
-		$body .= sprintf(esc_html__('Title: %s', 'timetable'), $booking['event_title']) . '<br>';
-		$body .= sprintf(esc_html__('Time: %s', 'timetable'), $booking['start'] . '-' . $booking['end']) . '<br>';
-		$body .= sprintf(esc_html__('Column: %s', 'timetable'), $booking['weekday']) . '<br>';
+		$body .= sprintf(esc_html__('Buchung: #%d (%s)', 'timetable'), $booking['booking_id'], $booking['booking_datetime']) . '<br>';
+		$body .= sprintf(esc_html__('Kursname: %s', 'timetable'), $booking['event_title']) . '<br>';
+		$eventDate = $booking['eventDate'];
+		$formattedDate = date('d.m.Y', strtotime($eventDate));
+		$body .= sprintf(esc_html__('Tag: %s', 'timetable'), $formattedDate) . '<br>';
+		$body .= sprintf(esc_html__('Uhrzeit: %s', 'timetable'), $booking['start'] . '-' . $booking['end']) . '<br>';
+		$body .= sprintf(esc_html__('Ort: %s', 'timetable'), $booking['weekday']) . '<br>';
 		if($booking['event_description_1'])
-			$body .= sprintf(esc_html__('Description 1: %s', 'timetable'), $booking['event_description_1']) . '<br>';
+			$body .= sprintf(esc_html__('Hinweis 1: %s', 'timetable'), $booking['event_description_1']) . '<br>';
 		if($booking['event_description_2'])
-			$body .= sprintf(esc_html__('Description 2: %s', 'timetable'), $booking['event_description_2']) . '<br>';
+			$body .= sprintf(esc_html__('Hinweis 2: %s', 'timetable'), $booking['event_description_2']) . '<br>';
 		$body .= '<br>';
+		$body .= sprintf('<div><p>Bis demnächst und liebe Grüße aus dem Dachsbau.</p><p>Sporttreff Karower Dachse e.V. </br>Achillesstr. 57</br>13125 Berlin </br></p><p>Telefon: 030 / 946 33 570</br>www.karowerdachse.de') . '<br>';
 	}
-	
-	wp_mail($admin_name . ' <' . $admin_email . '>', $subject, $body, $headers);
-	die;
+
+	wp_mail($client_name . ' <' . $client_email . '>', $subject, $body, $headers);
+	return;
 }
+
 add_action('init', 'timetable_cancel_booking');
 
 function timetable_phpmailer_init($mail) 

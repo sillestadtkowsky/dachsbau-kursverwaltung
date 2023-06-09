@@ -90,6 +90,7 @@ class TT_DB
 			event_hour.weekday_id AS weekday_id,
 			booking.booking_datetime AS booking_datetime,
 			booking.validation_code,
+			booking.eventDate,
 			event.ID AS event_id, 
 			event.post_title AS event_title, 
 			event_hour.event_hours_id,
