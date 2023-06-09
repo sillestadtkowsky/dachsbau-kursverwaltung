@@ -91,6 +91,7 @@ class TT_DB
 			booking.booking_datetime AS booking_datetime,
 			booking.validation_code,
 			booking.eventDate,
+			booking.visited,
 			event.ID AS event_id, 
 			event.post_title AS event_title, 
 			event_hour.event_hours_id,
