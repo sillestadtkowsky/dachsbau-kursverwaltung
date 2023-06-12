@@ -77,6 +77,9 @@ class TT_DB
 			'page_number' => 1,
 			'order' => 'DESC',
 			'orderby' => 'booking',
+			'visited' => 2,
+			'weekday' => null
+
 		), $args);
 
 		global $wpdb;
@@ -91,7 +94,7 @@ class TT_DB
 			booking.booking_datetime AS booking_datetime,
 			booking.validation_code,
 			booking.eventDate,
-			booking.visited,
+			booking.visited AS visited,
 			event.ID AS event_id, 
 			event.post_title AS event_title, 
 			event_hour.event_hours_id,
@@ -129,6 +132,13 @@ class TT_DB
 			ON (guest.guest_id=booking.guest_id)
 		WHERE 1=1 ';
 		
+		if((int) $args['visited'] == 0 || (int) $args['visited'] == 1 )
+		{
+			$query .= 
+			' AND booking.visited=%d';
+			$queryArgs[] = (int)$args['visited'];
+		}
+
 		if($args['event_id'])
 		{
 			$query .= 
@@ -169,6 +179,14 @@ class TT_DB
 			$query .= ')';
 		}
 		
+		
+		if($args['weekday'])
+		{
+			$query .= 
+			' AND weekday.post_title LIKE %s';
+			$queryArgs[] = '%' . $args['weekday'] . '%';
+		}
+
 		if($args['validation_code'])
 		{
 			$query .= 
