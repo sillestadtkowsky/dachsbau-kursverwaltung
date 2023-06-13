@@ -69,6 +69,7 @@ class TT_DB
 			'bookings_ids' => null,
 			'weekdays_ids' => null,
 			'event_hours_ids' => null,
+			'event_hours_id' => null,
 			'booked_past' => 0,
 			'validation_code' => '',
 			'event_id' => 0,
@@ -218,6 +219,13 @@ class TT_DB
 			}
 			$query = rtrim($query, ',');
 			$query .= ')';
+		}
+
+		if($args['event_hours_id'])
+		{
+			$query .= 
+			' AND event_hour.event_hours_id=%d';
+			$queryArgs[] = (int)$args['event_hours_id'];
 		}
 		
 		if((int)$args['booked_past'])
