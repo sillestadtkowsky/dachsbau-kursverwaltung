@@ -79,7 +79,8 @@ class TT_DB
 			'order' => 'DESC',
 			'orderby' => 'booking',
 			'visited' => 2,
-			'weekday' => null
+			'weekday' => null,
+			'eventDate' => null
 
 		), $args);
 
@@ -145,6 +146,14 @@ class TT_DB
 			$query .= 
 			' AND event_hour.event_id=%d';
 			$queryArgs[] = (int)$args['event_id'];
+		}
+
+		if($args['eventDate'])
+		{
+			if ($args['eventDate'] instanceof DateTime) {
+				$formattedEventDate = $args['eventDate']->format('Y-m-d');
+				$query .= " AND booking.eventDate = '$formattedEventDate'";
+			}
 		}
 
 		if($args['events_ids'])
