@@ -5,7 +5,7 @@ Plugin URI: https://1.envato.market/timetable-responsive-schedule-for-wordpress
 Description: "Kursverwaltung für den Dachsbau" ist ein leistungsstarkes und benutzerfreundliches Zeitplan-Plugin für WordPress. Es hilft Ihnen, in wenigen Minuten eine Zeitplanansicht Ihrer Veranstaltungen zu erstellen. Es ist perfekt für Sportunterricht, Schul- oder Kindergartenklassen, medizinische Abteilungen, Nachtclubs, Unterrichtspläne, Essenspläne usw. Es wird mit einem Veranstaltungsmanager, einem Shortcode für Veranstaltungsereignisse, einem Timetable Shortcode Generator und einem Widget für bevorstehende Veranstaltungen geliefert.
 Author: QuanticaLabs (edit by Silvio Osowsky)
 Author URI: https://1.envato.market/quanticalabs-portfolio-codecanyon
-Version: 7.3.11
+Version: 7.4.2
 */
 
 //translation
