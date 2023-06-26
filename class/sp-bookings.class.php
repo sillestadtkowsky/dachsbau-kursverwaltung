@@ -146,13 +146,14 @@ class SP_Bookings
 	public function handle_booking_export()
 	{
 		$action = filter_input(INPUT_POST, 'action', FILTER_SANITIZE_STRING);
+		ob_clean();
+  		ob_start();
 
 		if($action!='export-bookings')
 			return;
 		
 		$events = filter_input(INPUT_POST, 'booking_export_events', FILTER_SANITIZE_NUMBER_INT, FILTER_REQUIRE_ARRAY);
 		$weekdays = filter_input(INPUT_POST, 'booking_export_weekdays', FILTER_SANITIZE_NUMBER_INT, FILTER_REQUIRE_ARRAY);
-
 		$bookings = TT_DB::getBookings(array(
 			'events_ids' => $events,
 			'weekdays_ids' => $weekdays,
@@ -162,43 +163,40 @@ class SP_Bookings
 
 		$data = '';
 		$dataArray = array();
-		$dataArray[] = esc_html__('ID','timetable');
-		$dataArray[] = esc_html__('Event','timetable');
-		$dataArray[] = esc_html__('Weekday','timetable');
-		$dataArray[] = esc_html__('Start','timetable');
-		$dataArray[] = esc_html__('End','timetable');
-		$dataArray[] = esc_html__('Type','timetable');
+		$dataArray[] = esc_html__('Kurs','timetable');
+		$dataArray[] = esc_html__('Datum','timetable');
+		$dataArray[] = esc_html__('Ort','timetable');
+		$dataArray[] = esc_html__('Beginn','timetable');
+		$dataArray[] = esc_html__('Ende','timetable');
+		$dataArray[] = esc_html__('Vorname','timetable');
 		$dataArray[] = esc_html__('Name','timetable');
 		$dataArray[] = esc_html__('E-mail','timetable');
-		$dataArray[] = esc_html__('Phone','timetable');
-		$dataArray[] = esc_html__('Message','timetable');
+		$dataArray[] = esc_html__('Mitgliedsnummer','timetable');
 				
-        $data .= implode(chr(9),$dataArray) . "\r\n";
+		$data .= implode(chr(9),$dataArray) . "\r\n";
         
 		if($bookings)
 		{
 			foreach($bookings as $booking)
 			{
 				$dataArray = array();
-				$dataArray[] = $booking['booking_id'];
 				$dataArray[] = $booking['event_title'];
+				$dataArray[] = $booking['eventDate'];
 				$dataArray[] = $booking['weekday'];
 				$dataArray[] = $booking['start'];
 				$dataArray[] = $booking['end'];
 				if($booking['user_id'])
 				{
-					$dataArray[] = sprintf(esc_html__('Logged in (%s)', 'timetable'), $booking['user_login']);
+					$dataArray[] = '';	//empty for phone column
 					$dataArray[] = $booking['user_name'];
 					$dataArray[] = $booking['user_email'];
-					$dataArray[] = '';	//empty for phone column
 					$dataArray[] = '';	//empty for message column
 				}
 				else
 				{
-					$dataArray[] = esc_html__('Guest', 'timetable');
+					$dataArray[] = $booking['guest_phone'];
 					$dataArray[] = $booking['guest_name'];
 					$dataArray[] = $booking['guest_email'];
-					$dataArray[] = $booking['guest_phone'];
 					$dataArray[] = $booking['guest_message'];
 				}
 
