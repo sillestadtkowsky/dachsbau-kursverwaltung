@@ -78,9 +78,10 @@ class TT_DB
 			'page_number' => 1,
 			'order' => 'DESC',
 			'orderby' => 'booking',
-			'visited' => 2,
+			'visited' => 0,
 			'weekday' => null,
-			'eventDate' => null
+			'eventDate' => null,
+			'guest_id'=> 0
 
 		), $args);
 
@@ -109,7 +110,7 @@ class TT_DB
 			user.user_login,
 			user.display_name AS user_name,
 			user.user_email, 
-			guest.guest_id AS guest_id,
+			booking.guest_id AS guest_id,
 			guest.name AS guest_name,
 			guest.email AS guest_email,
 			guest.phone AS guest_phone,
@@ -257,14 +258,14 @@ class TT_DB
 				case 'event':
 					$query .= ' ORDER BY event_title ' . $order;
 					break;
-				case 'user':
-					$query .= ' ORDER BY user_name ' . $order;
+				case 'user_name':
+					$query .= ' ORDER BY user_name ' . $order . ' ,guest_name ' . $order;
 					break;
 			}
 		}
 		else
 		{
-			$query .= ' ORDER BY booking_id ' . $order;
+			$query .= ' ORDER BY user_name ' . $order;
 		}
 		
 		if($args['per_page'])

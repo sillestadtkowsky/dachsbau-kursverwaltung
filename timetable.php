@@ -1691,8 +1691,7 @@ function tt_booking_form($args)
     		<label for="tt_guest_email">' . $placeholder . '</label>
     		<input id="tt_guest_email" class="tt_field tt_guest_email" name="email" type="email"  value="" autocomplete="off"/>
     	</div>';
-    	$output .= 
-    		'<div style="color: red;font-size:1rem; margin:auto; padding:10px; text-align:center;vertical-align:center;">Bitte beachte die aktuellen <a href="https://karowerdachse.de/entwicklungen-rund-um-das-thema-coronavirus/">Hygienevorschriften</a>.</div>';
+    	$output .= '<div style="color: red;font-size:1rem; margin:auto; padding:10px; text-align:center;vertical-align:center;"><b>Bitte beachte</b>: Aufsichtspflicht bei Kindern unter 12 Jahren.</div>';
     	
 		//phone field
     	//if($args['show_guest_phone_field']=='yes')
