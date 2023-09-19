@@ -5,7 +5,7 @@ Plugin URI: https://1.envato.market/timetable-responsive-schedule-for-wordpress
 Description: "Kursverwaltung für den Dachsbau" ist ein leistungsstarkes und benutzerfreundliches Zeitplan-Plugin für WordPress. Es hilft Ihnen, in wenigen Minuten eine Zeitplanansicht Ihrer Veranstaltungen zu erstellen. Es ist perfekt für Sportunterricht, Schul- oder Kindergartenklassen, medizinische Abteilungen, Nachtclubs, Unterrichtspläne, Essenspläne usw. Es wird mit einem Veranstaltungsmanager, einem Shortcode für Veranstaltungsereignisse, einem Timetable Shortcode Generator und einem Widget für bevorstehende Veranstaltungen geliefert.
 Author: QuanticaLabs (edit by Silvio Osowsky)
 Author URI: https://1.envato.market/quanticalabs-portfolio-codecanyon
-Version: 7.4.2
+Version: 7.4.3
 */
 
 //translation
@@ -1691,8 +1691,8 @@ function tt_booking_form($args)
     		<label for="tt_guest_email">' . $placeholder . '</label>
     		<input id="tt_guest_email" class="tt_field tt_guest_email" name="email" type="email"  value="" autocomplete="off"/>
     	</div>';
-    	$output .= 
-    		'<div style="color: red;font-size:1rem; margin:auto; padding:10px; text-align:center;vertical-align:center;">Bitte beachte die aktuellen <a href="https://karowerdachse.de/entwicklungen-rund-um-das-thema-coronavirus/">Hygienevorschriften</a>.</div>';
+    	$output .= '<div style="color: red; font-size:1rem; padding:10px; text-align:left;vertical-align:left;"><b>Bitte beachte</b>: Aufsichtspflicht bei Kindern unter 12 Jahren.</div>';
+		$output .= '<div style="color: red; font-size:1rem; padding:10px; text-align:left;vertical-align:left;"><a href="https://karowerdachse.de/kinderschutz/" target="_blank">Informationen zum Kinderschutz</a></div>';
     	
 		//phone field
     	//if($args['show_guest_phone_field']=='yes')
