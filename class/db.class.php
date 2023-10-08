@@ -78,7 +78,7 @@ class TT_DB
 			'page_number' => 1,
 			'order' => 'DESC',
 			'orderby' => 'booking',
-			'visited' => 0,
+			'visited' => null,
 			'weekday' => null,
 			'eventDate' => null,
 			'guest_id'=> 0
@@ -135,11 +135,13 @@ class TT_DB
 			ON (guest.guest_id=booking.guest_id)
 		WHERE 1=1 ';
 		
-		if((int) $args['visited'] == 0 || (int) $args['visited'] == 1 )
-		{
-			$query .= 
-			' AND booking.visited=%d';
-			$queryArgs[] = (int)$args['visited'];
+		if($args['visited'] !== null){
+			if((int) $args['visited'] == 0 || (int) $args['visited'] == 1)
+			{
+				$query .= 
+				' AND booking.visited=%d';
+				$queryArgs[] = (int)$args['visited'];
+			}
 		}
 
 		if($args['event_id'])
@@ -259,13 +261,14 @@ class TT_DB
 					$query .= ' ORDER BY event_title ' . $order;
 					break;
 				case 'user_name':
-					$query .= ' ORDER BY user_name ' . $order . ' ,guest_name ' . $order;
+					$query .= ' ORDER BY user.display_name ' . $order ;
+					// $query .= ' ORDER BY guest.name ' . $order . ', user.display_name ';
 					break;
 			}
 		}
 		else
 		{
-			$query .= ' ORDER BY user_name ' . $order;
+			$query .= ' ORDER BY guest.name ' . $order;
 		}
 		
 		if($args['per_page'])
