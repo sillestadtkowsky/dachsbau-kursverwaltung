@@ -261,10 +261,10 @@ class TT_DB
 					$query .= ' ORDER BY event_title ' . $order;
 					break;
 				case 'guest_name':
-					$query .= ' ORDER BY guest_name ' . $order;
+					$query .= ' ORDER BY guest_name  ' . $order . ', user_name ' . $order ;
 					break;
 				case 'user_name':
-					$query .= ' ORDER BY user_name ' . $order;
+					$query .= ' ORDER BY user_name ' . $order . ', guest_name ' . $order ;
 					break;
 			}
 		}
