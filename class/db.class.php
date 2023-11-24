@@ -61,6 +61,24 @@ class TT_DB
 		
 		return $event_hour_details;
 	}
+
+	public static function getBookingCountForEvent($eventID)
+	{
+		global $wpdb;
+	
+		$query = '
+			SELECT 
+				COUNT(*) AS booking_count
+			FROM 
+				' . $wpdb->prefix . 'event_hours_booking AS booking
+			WHERE 
+				booking.event_hours_id = %d';
+	
+		$query = $wpdb->prepare($query, $eventID);
+		$bookingCount = $wpdb->get_var($query);
+	
+		return $bookingCount;
+	}
 	
 	public static function getBookings($args)
 	{
@@ -81,7 +99,8 @@ class TT_DB
 			'visited' => null,
 			'weekday' => null,
 			'eventDate' => null,
-			'guest_id'=> 0
+			'guest_id'=> 0,
+			'hasBookings' => false,
 
 		), $args);
 
@@ -142,6 +161,13 @@ class TT_DB
 				' AND booking.visited=%d';
 				$queryArgs[] = (int)$args['visited'];
 			}
+		}
+
+		if ($args['hasBookings'] === true) {
+			$query .= ' AND event_hour.event_hours_id IN (
+				SELECT DISTINCT event_hour.event_hours_id
+				FROM ' . $wpdb->prefix . 'event_hours_booking
+			)';
 		}
 
 		if($args['event_id'])
