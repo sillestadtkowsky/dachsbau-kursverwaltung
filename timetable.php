@@ -594,7 +594,7 @@ if(is_admin())
 		    
 		        $result['msg'] .= sprintf(wp_kses(__('<p class="tt_guest_option %s">Don\'t have an account? <a href="%s">Continue as guest</a></p>', 'timetable'), array("a" => array("href" => array()), "p" => array("class" => array()))), ($guestOptionHidden ? 'tt_hide' : ''), '#');
 		}
-		*/
+		
 		
 		if(!$user_id && $booking_form_config['allow_user_booking']=='yes')
 		{
@@ -605,6 +605,7 @@ if(is_admin())
 		    
 		        $result['msg'] .= sprintf(wp_kses(__('<p class="tt_login_option %s">Got an account? <a href="%s">Login</a></p>', 'timetable'), array("a" => array("href" => array()), "p" => array("class" => array()))), ($loginOptionHidden ? 'tt_hide' : ''), wp_login_url($redirect_url));
 		}
+		*/
 		
 		timetable_ajax_response($result);
 	}
@@ -1689,58 +1690,32 @@ function tt_booking_form($args)
     	$output .= 
     	'<div class="tt_field_wrapper ">
     		<label for="tt_guest_email">' . $placeholder . '</label>
-    		<input id="tt_guest_email" class="tt_field tt_guest_email" name="email" type="email"  value="" autocomplete="off"/>
+    		<input id="tt_guest_email" class="tt_field tt_guest_email" name="email" type="email"  value="" autocomplete="on"/>
     	</div>';
-    	$output .= 
-    		'<div style="color: red;font-size:1rem; margin:auto; padding:10px; text-align:center;vertical-align:center;">Bitte beachte die aktuellen <a href="https://karowerdachse.de/entwicklungen-rund-um-das-thema-coronavirus/">Hygienevorschriften</a>.</div>';
-    	
-		//phone field
-    	//if($args['show_guest_phone_field']=='yes')
-    	//{
 
-    	//}
-    	
-		/*
-    	//slots field
-    	//if($max_slots>1)
-    	//{
-    		$output .=
-    		'<div class="tt_field_wrapper" data-max-slots="'.esc_attr($max_slots).'">
-    			<label for="tt_slots_number">' . esc_html__('Slots number', 'timetable') . '</label>
-    			<div class="tt_slots_number_wrapper">
-    				<input id="tt_slots_number" class="tt_field tt_slots_number" name="slots_number" type="number" min="1" max="' . esc_attr($max_slots) . '" step="1" value="1" autocomplete="off"/>
-    				<input type="button" class="tt_slots_number_plus" value="+">
-    				<input type="button" class="tt_slots_number_minus" value="-">
-    			</div>
-    		</div>';
-    	//}
-		*/
-
-    	//message field
-    	//if($args['show_guest_message_field']=='yes')
-    	//{
-    		$placeholder = ($args['guest_message_field_required']=='yes' ? esc_html__('Mitgliedsnummer *', 'timetable') : 						esc_html__('Mitgliedsnummer', 'timetable'));
-    		$output .= 
-    		'<div class="tt_field_wrapper wide ">
-    			<label for="tt_guest_message">' . $placeholder . '</label>
-    			<input id="tt_guest_message" class="tt_field tt_guest_message" name="message" autocomplete="off"></input>
-				<label style="padding-bottom:10px;" for="tt_guest_phone">Du hast Deine Nummer gerade nicht zur Hand? Dann melde dich bei uns.</label>
-    		</div>';
-    	//}
-    
+		//mitgliedsnummer field(required)
+		$placeholder = ($args['guest_message_field_required']=='yes' ? esc_html__('Mitgliedsnummer *', 'timetable') : esc_html__('Mitgliedsnummer', 'timetable'));
+		$output .= 
+		'<div class="tt_field_wrapper">
+			<label for="tt_guest_message">' . $placeholder . '</label>
+			<input id="tt_guest_message" class="tt_field tt_guest_message" name="message" autocomplete="off"></input>
+		</div>';
+    	    
     	//terms checkbox field
     	if($args['terms_checkbox']=='yes')
     	{
     		$output .= 
     		'<div class="tt_field_wrapper wide terms_checkbox_wrapper ">
     			<input id="tt_terms_checkbox" class="tt_field tt_terms_checkbox" name="terms_checkbox" type="checkbox" value="1" autocomplete="off"/>
-    			<label for="tt_terms_checkbox">' . $args['terms_message'] . '</label>
-				<div><a href="https://karowerdachse.de/datenschutz">Datenschutz</a></div>
-    		</div>';
+    			<label for="tt_terms_checkbox">' . $args['terms_message'] . ' und beachte unsere Hygienevorschriften</label>
+    		</div>
+			<div style="display: flex; justify-content: space-around;">
+    			<a href="https://karowerdachse.de/datenschutz" style="flex: 1; text-align: center; padding: 0 10px;">Datenschutz</a>
+   				<a href="https://karowerdachse.de/entwicklungen-rund-um-das-thema-coronavirus/" style="flex: 1; text-align: center; padding: 0 10px;">Hygienevorschriften</a>
+			</div>';
     	}
     	
-    	$output .= 
-    	'</form>';
+    	$output .= '</form>';
 	}
 	
 	return $output;
