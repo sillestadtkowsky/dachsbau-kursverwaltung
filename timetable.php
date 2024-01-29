@@ -5,7 +5,7 @@ Plugin Name: Kursverwaltung für den Dachsbau
  * Description: "Kursverwaltung für den Dachsbau" ist ein leistungsstarkes und benutzerfreundliches Zeitplan-Plugin für WordPress. Es hilft Ihnen, in wenigen Minuten eine Zeitplanansicht Ihrer Veranstaltungen zu erstellen. Es ist perfekt für Sportunterricht, Schul- oder Kindergartenklassen, medizinische Abteilungen, Nachtclubs, Unterrichtspläne, Essenspläne usw. Es wird mit einem Veranstaltungsmanager, einem Shortcode für Veranstaltungsereignisse, einem Timetable Shortcode Generator und einem Widget für bevorstehende Veranstaltungen geliefert.
  * Author: QuanticaLabs (edit by Silvio Osowsky)
  * Author URI: https://1.envato.market/quanticalabs-portfolio-codecanyon
- * Version: 7.4.10
+ * Version: 7.4.11
  * Requires at least: 6.4.0
 */
 
@@ -1712,7 +1712,6 @@ function tt_booking_form($args)
     		</div>
 			<div style="display: flex; justify-content: space-between;">
     			<a target="_blank" href="https://karowerdachse.de/datenschutz" style="text-align: center; padding: 0 10px;">Datenschutz</a>
-   				<a target="_blank" href="https://karowerdachse.de/entwicklungen-rund-um-das-thema-coronavirus/" style="text-align: center; padding: 0 10px;">Hygienevorschriften</a>
 				<a target="_blank" href="https://karowerdachse.de/kinderschutz/" style="text-align: center; padding: 0 10px;">Aufsichtspflicht</a>
 			</div>';
     	}
