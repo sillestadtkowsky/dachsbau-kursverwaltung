@@ -95,7 +95,7 @@ class TT_DB
 			'per_page' => 0,
 			'page_number' => 1,
 			'order' => 'DESC',
-			'orderby' => 'booking',
+			'orderby' => null,
 			'visited' => null,
 			'weekday' => null,
 			'eventDate' => null,
