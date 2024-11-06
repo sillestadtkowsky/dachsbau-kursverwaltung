@@ -182,6 +182,20 @@ function process_waitlist_submission() {
         $waitlist_email = sanitize_email($_POST['waitlist_email']);
         $member_id = sanitize_text_field($_POST['member_id']);
 
+        // Mitgliedsnummer prüfen
+        $member = MEMBERS_CHECK::checkMeberByNumber($member_id);
+        if ($member == 0) {
+            // Zeige eine Fehlermeldung im Formular an, wenn die Mitgliedsnummer ungültig ist und öffne das Overlay erneut
+            echo "<script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.getElementById('error-message').style.display = 'block';
+                        document.getElementById('error-message').innerHTML = 'Gib bitte eine gültige Mitgliedsnummer ein. (NUR <u>EINE</u> MITGLIEDNUMMER ERLAUBT)';
+                        document.getElementById('waitlist-overlay-$event_hours_id').style.display = 'block';
+                    });
+                  </script>";
+            return;
+        }
+
         // Verhindere doppelte Einträge anhand der Mitgliedsnummer
         $existing_entry = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->prefix}waitlist WHERE event_id = %d AND member_id = %s",
@@ -189,29 +203,38 @@ function process_waitlist_submission() {
             $member_id
         ));
 
-        if (is_null($existing_entry) || $existing_entry == 0) {
-            // Füge den Eintrag zur Warteliste hinzu
-            $wpdb->insert(
-                "{$wpdb->prefix}waitlist",
-                array(
-                    'event_id' => $event_hours_id,
-                    'user_email' => $waitlist_email,
-                    'member_id' => $member_id,
-                    'date_registered' => current_time('mysql')
-                ),
-                array('%d', '%s', '%s', '%s')
-            );
-
-            if ($wpdb->last_error) {
-                $message = 'Datenbankfehler: ' . $wpdb->last_error;
-            } else {
-                $message = 'Sie wurden erfolgreich auf die Warteliste gesetzt.';
-            }
-        } else {
-            $message = 'Sie sind bereits auf der Warteliste für diesen Kurs.';
+        if ($existing_entry > 0) {
+            // Zeige eine Fehlermeldung, wenn der Nutzer bereits für diesen Kurs auf der Warteliste ist
+            echo "<script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.getElementById('error-message').style.display = 'block';
+                        document.getElementById('error-message').innerHTML = 'Sie sind bereits auf der Warteliste für diesen Kurs.';
+                        document.getElementById('waitlist-overlay-$event_hours_id').style.display = 'block';
+                    });
+                  </script>";
+            return;
         }
 
-        // Erfolgsmeldung oder Fehlernachricht in Overlay anzeigen
+        // Füge den Eintrag zur Warteliste hinzu, wenn noch kein Eintrag vorhanden ist
+        $wpdb->insert(
+            "{$wpdb->prefix}waitlist",
+            array(
+                'event_id' => $event_hours_id,
+                'user_email' => $waitlist_email,
+                'member_id' => $member_id,
+                'date_registered' => current_time('mysql')
+            ),
+            array('%d', '%s', '%s', '%s')
+        );
+
+        // Überprüfe, ob ein Fehler beim Einfügen auftrat
+        if ($wpdb->last_error) {
+            $message = 'Datenbankfehler: ' . $wpdb->last_error;
+        } else {
+            $message = 'Sie wurden erfolgreich auf die Warteliste gesetzt.';
+        }
+
+        // Erfolgsmeldung im Overlay anzeigen
         echo "<div id='waitlist-message-overlay' class='waitlist-overlay' style='display: block;'>
                 <div class='waitlist-overlay-content'>
                     <span class='close-overlay' onclick='closeWaitlistMessageOverlay()'>&times;</span>
@@ -228,7 +251,6 @@ function process_waitlist_submission() {
     }
 }
 add_action('wp', 'process_waitlist_submission');
-
 
 
 //Adds a box to the right column and to the main column on the Events edit screens

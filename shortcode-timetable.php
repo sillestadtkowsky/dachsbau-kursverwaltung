@@ -2412,78 +2412,94 @@ function timetable_prepare_booking_button($args)
 				.event_hour_booking_waitinglist :hover{
 					text-decoration: none;
 				}
-			.waitlist-overlay {
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				background-color: rgba(0, 0, 0, 0.8);
-				display: none;
-				z-index: 9998;
-			}
-			.waitlist-overlay-content {
-				position: relative;
-				top: 50%;
-				left: 50%;
-				transform: translate(-50%, -50%);
-				background-color: white;
-				padding: 20px;
-				border-radius: 5px;
-				width: 90%;
-				max-width: 400px;
-				text-align: center;
-				color: black;
-			}
-			.close-overlay {
-				position: absolute;
-				top: 10px;
-				right: 15px;
-				font-size: 24px;
-				cursor: pointer;
-			}
-			.form-grid {
-				display: grid;
-				gap: 10px;
-				margin-top: 15px;
-			}
-		</style>";
-	
+			    .waitlist-overlay {
+					position: fixed;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
+					background-color: rgba(0, 0, 0, 0.8);
+					display: none;
+					z-index: 9998;
+				}
+				.waitlist-overlay-content {
+					position: relative;
+					top: 50%;
+					left: 50%;
+					transform: translate(-50%, -50%);
+					background-color: white;
+					padding: 20px;
+					border-radius: 5px;
+					width: 90%;
+					max-width: 400px;
+					text-align: center;
+					color: black;
+				}
+				.close-overlay {
+					position: absolute;
+					top: 10px;
+					right: 15px;
+					font-size: 24px;
+					cursor: pointer;
+				}
+				.form-grid {
+					display: grid;
+					gap: 10px;
+					margin-top: 15px;
+				}
+				.course-info {
+					font-weight: bold;
+					margin-bottom: 15px;
+					color: #333;
+				}
+				.error-message {
+					color: red;
+					font-weight: bold;
+					margin-top: 10px;
+					display: none;
+				}
+			</style>";
+
 		// Wartelisten-Button
 		$output .= "<a href='#' class='event_hour_booking_waitinglist id-" . esc_attr($args['event_hours_id']) . " waitlist' title='Kurs ausgebucht - Auf die Warteliste setzen' onclick='openWaitlistOverlay(" . esc_attr($args['event_hours_id']) . "); return false;'>Warteliste</a>";
 	
 		// Overlay-Formular (versteckt)
-		$output .= "<div id='waitlist-overlay-" . esc_attr($args['event_hours_id']) . "' class='waitlist-overlay'>
-						<div class='waitlist-overlay-content'>
-							<span class='close-overlay' onclick='closeWaitlistOverlay(" . esc_attr($args['event_hours_id']) . ");'>&times;</span>
-							<h2>Auf die Warteliste setzen</h2>
-							<p>Dieser Kurs ist ausgebucht. Bitte tragen Sie Ihre Daten ein, um auf die Warteliste gesetzt zu werden.</p>
-							<form method='post' action=''>
-								<input type='hidden' name='event_hours_id' value='" . esc_attr($args['event_hours_id']) . "'>
-								<div class='form-grid'>
-									<input type='email' name='waitlist_email' placeholder='Ihre E-Mail-Adresse' required>
-									<input type='text' name='member_id' placeholder='Mitgliedsnummer' required>
+			$output .= "<div id='waitlist-overlay-" . esc_attr($args['event_hours_id']) . "' class='waitlist-overlay'>
+							<div class='waitlist-overlay-content'>
+								<span class='close-overlay' onclick='closeWaitlistOverlay(" . esc_attr($args['event_hours_id']) . ");'>&times;</span>
+								<h2>Auf die Warteliste setzen</h2>
+								<div class='course-info'>
+									<div>Kurs: " . esc_html($args['name'] ?? 'Kursname') . " (" . esc_html($args['title'] ?? 'Kurstitel') . ")</div>
+									<div>Zeit: " . esc_html($args['start'] ?? '') . " - " . esc_html($args['end'] ?? '') . " Uhr, " . esc_html($args['week_name'] ?? '') . "</div>
 								</div>
-								<div style='margin-top: 10px; text-align: left;'>
-									<label>
-										<input type='checkbox' name='data_protection' required> Ich stimme der Verarbeitung meiner Daten gemäß der <a href='#'>Datenschutzerklärung</a> zu.
-									</label>
-								</div>
-								<input type='submit' name='join_waitlist' value='Auf die Warteliste setzen' style='margin-top: 15px;'>
-							</form>
-						</div>
-					</div>";
-	
-		// JavaScript zum Öffnen und Schließen des Overlays
-		$output .= "<script>
-						function openWaitlistOverlay(eventHoursId) {
-							document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'block';
-						}
-						function closeWaitlistOverlay(eventHoursId) {
-							document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'none';
-						}
-					</script>";
-	}	
+								<p>Dieser Kurs ist ausgebucht. Bitte tragen Sie Ihre Daten ein, um auf die Warteliste gesetzt zu werden.</p>
+								<form method='post' action=''>
+									<input type='hidden' name='event_hours_id' value='" . esc_attr($args['event_hours_id']) . "'>
+									<div class='form-grid'>
+										<input type='email' name='waitlist_email' placeholder='Ihre E-Mail-Adresse' value='" . esc_attr($_POST['waitlist_email'] ?? '') . "' required>
+										<input type='text' name='member_id' placeholder='Mitgliedsnummer' value='" . esc_attr($_POST['member_id'] ?? '') . "' required>
+									</div>
+									<div style='margin-top: 10px; text-align: left;'>
+										<label>
+											<input type='checkbox' name='data_protection' required> Ich stimme der Verarbeitung meiner Daten gemäß der <a href='#'>Datenschutzerklärung</a> zu.
+										</label>
+									</div>
+									<div class='error-message' id='error-message'></div>
+									<input type='submit' name='join_waitlist' value='Auf die Warteliste setzen' style='margin-top: 15px;'>
+								</form>
+							</div>
+						</div>";
+
+			// JavaScript zum Öffnen und Schließen des Overlays
+			$output .= "<script>
+							function openWaitlistOverlay(eventHoursId) {
+								document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'block';
+							}
+							function closeWaitlistOverlay(eventHoursId) {
+								document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'none';
+							}
+						</script>";
+		}
 	else
 	{
 		$event = array($args);
