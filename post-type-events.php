@@ -173,19 +173,20 @@ function timetable_events_init()
 add_action("init", "timetable_events_init"); 
 
 function process_waitlist_submission() {
-    // Überprüfen, ob das Formular abgesendet wurde
-    if (isset($_POST['join_waitlist']) && !empty($_POST['waitlist_email']) && !empty($_POST['event_hours_id'])) {
+    // Überprüfen, ob das Formular abgesendet wurde und die Datenschutzerklärung akzeptiert wurde
+    if (isset($_POST['join_waitlist']) && !empty($_POST['waitlist_email']) && !empty($_POST['event_hours_id']) && !empty($_POST['member_id']) && isset($_POST['data_protection'])) {
         global $wpdb;
 
         // Bereite die Daten vor
         $event_hours_id = intval($_POST['event_hours_id']);
         $waitlist_email = sanitize_email($_POST['waitlist_email']);
+        $member_id = sanitize_text_field($_POST['member_id']);
 
-        // Verhindere doppelte Einträge
+        // Verhindere doppelte Einträge anhand der Mitgliedsnummer
         $existing_entry = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}waitlist WHERE event_id = %d AND user_email = %s",
-            $event_hours_id, // Verweis auf die tatsächliche Event-ID (in der Tabelle als event_id gespeichert)
-            $waitlist_email
+            "SELECT COUNT(*) FROM {$wpdb->prefix}waitlist WHERE event_id = %d AND member_id = %s",
+            $event_hours_id,
+            $member_id
         ));
 
         if (is_null($existing_entry) || $existing_entry == 0) {
@@ -195,9 +196,10 @@ function process_waitlist_submission() {
                 array(
                     'event_id' => $event_hours_id,
                     'user_email' => $waitlist_email,
+                    'member_id' => $member_id,
                     'date_registered' => current_time('mysql')
                 ),
-                array('%d', '%s', '%s')
+                array('%d', '%s', '%s', '%s')
             );
 
             if ($wpdb->last_error) {
@@ -216,50 +218,17 @@ function process_waitlist_submission() {
                     <p>$message</p>
                 </div>
               </div>";
-        
+
         // JavaScript für das Schließen des Overlays
         echo "<script>
                 function closeWaitlistMessageOverlay() {
                     document.getElementById('waitlist-message-overlay').style.display = 'none';
                 }
               </script>";
-        
-        // Inline CSS für das Overlay
-        echo "<style>
-                .waitlist-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background-color: rgba(0, 0, 0, 0.8);
-                    display: none;
-                    z-index: 9999;
-                }
-                .waitlist-overlay-content {
-                    position: relative;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background-color: white;
-                    padding: 20px;
-                    border-radius: 5px;
-                    width: 90%;
-                    max-width: 400px;
-                    text-align: center;
-                    color: black;
-                }
-                .close-overlay {
-                    position: absolute;
-                    top: 10px;
-                    right: 15px;
-                    font-size: 24px;
-                    cursor: pointer;
-                }
-              </style>";
     }
 }
 add_action('wp', 'process_waitlist_submission');
+
 
 
 //Adds a box to the right column and to the main column on the Events edit screens

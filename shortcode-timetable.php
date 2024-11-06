@@ -2384,94 +2384,106 @@ function timetable_prepare_booking_button($args)
 	{
 		$output .= "<a href='' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " booked' style='" . (strlen($args['booked_text_color']) ? " color: #" . esc_attr($args['booked_text_color']) . " !important;" : "") . (strlen($args['booked_bg_color']) ? " background-color: #" . esc_attr($args['booked_bg_color']) . " !important;" : "") . "' title='" . esc_attr($args['booked_label']) . "'>" . $args['booked_label'] . "</a>";
 	}
-	elseif(!$args['available_slots'])
-	{
-    
+	elseif(!$args['available_slots']) {
+
+		// Inline-CSS für das Overlay und die Warteliste
 		$output .= "<style>
-		.event_hour_booking_waitinglist{
-			display: block;
-			margin: 0;
-			padding: 11px 5px 11px;
-			width: 100%;
-			font-size: 14px;
-			line-height: 18px;
-			height: auto;
-			font-weight: normal;
-			text-decoration: none !important;
-			-webkit-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
-			-moz-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
-			-o-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
-			transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
-			-webkit-border-radius: 2px;
-			-moz-border-radius: 2px;
-			border-radius: 2px;
-			text-align: center;
-			background-color: red;
-		}
-		.event_hour_booking_waitinglist :hover{
-			text-decoration: none;
-		}
-		.waitlist-overlay {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-color: rgba(0, 0, 0, 0.8);
-			display: none;
-			z-index: 9998;
-		}
-		.waitlist-overlay-content {
-			position: relative;
-			top: 50%;
-			left: 50%;
-			transform: translate(-50%, -50%);
-			background-color: white;
-			padding: 20px;
-			border-radius: 5px;
-			width: 90%;
-			max-width: 400px;
-			text-align: center;
-			color:black;
-		}
-		.close-overlay {
-			position: absolute;
-			top: 10px;
-			right: 15px;
-			font-size: 24px;
-			cursor: pointer;
-		}
-	</style>";
-
-	// Wartelisten-Trigger anzeigen, wenn keine Plätze mehr verfügbar sind
-    $output .= "<a href='#' class='event_hour_booking_waitinglist event_hour_waitlist id-" . esc_attr($args['event_hours_id']) . " waitlist' title='Kurs ausgebucht - Auf die Warteliste setzen' onclick='openWaitlistOverlay(" . esc_attr($args['event_hours_id']) . "); return false;'>Warteliste</a>";
-
-    // Overlay-Formular (versteckt) hinzufügen
-    $output .= "<div id='waitlist-overlay-" . esc_attr($args['event_hours_id']) . "' class='waitlist-overlay' style='display:none;'>
-                    <div class='waitlist-overlay-content'>
-                        <span class='close-overlay' onclick='closeWaitlistOverlay(" . esc_attr($args['event_hours_id']) . ");'>&times;</span>
-                        <h2>Auf die Warteliste setzen</h2>
-                        <p>Dieser Kurs ist ausgebucht. Bitte tragen Sie Ihre E-Mail-Adresse ein, um auf die Warteliste gesetzt zu werden.</p>
-                        <form method='post' action=''>
-                            <input type='hidden' name='event_hours_id' value='" . esc_attr($args['event_hours_id']) . "'>
-                            <input type='email' name='waitlist_email' placeholder='Ihre E-Mail-Adresse' required>
-                            <input type='submit' name='join_waitlist' value='Auf die Warteliste setzen'>
-                        </form>
-                    </div>
-                </div>";
-
-    // JavaScript zum Öffnen und Schließen des Overlays
-    $output .= "<script>
-                    function openWaitlistOverlay(eventHoursId) {
-                        document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'block';
-                    }
-                    function closeWaitlistOverlay(eventHoursId) {
-                        document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'none';
-                    }
-                </script>";
-
-		//$output .= "<a href='' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " unavailable' style='" . (strlen($args['unavailable_text_color']) ? " color: #" . esc_attr($args['unavailable_text_color']) . " !important;" : "") . (strlen($args['unavailable_bg_color']) ? " background-color: #" . esc_attr($args['unavailable_bg_color']) . " !important;" : "") . "' title='" . esc_attr($args['unavailable_label']) . "'>" . $args['unavailable_label'] . "</a>";
-	}
+				.event_hour_booking_waitinglist{
+					display: block;
+					margin: 0;
+					padding: 11px 5px 11px;
+					width: 100%;
+					font-size: 14px;
+					line-height: 18px;
+					height: auto;
+					font-weight: normal;
+					text-decoration: none !important;
+					-webkit-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
+					-moz-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
+					-o-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
+					transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
+					-webkit-border-radius: 2px;
+					-moz-border-radius: 2px;
+					border-radius: 2px;
+					text-align: center;
+					background-color: red;
+					color: white !important;
+				}
+				.event_hour_booking_waitinglist :hover{
+					text-decoration: none;
+				}
+			.waitlist-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0, 0, 0, 0.8);
+				display: none;
+				z-index: 9998;
+			}
+			.waitlist-overlay-content {
+				position: relative;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				background-color: white;
+				padding: 20px;
+				border-radius: 5px;
+				width: 90%;
+				max-width: 400px;
+				text-align: center;
+				color: black;
+			}
+			.close-overlay {
+				position: absolute;
+				top: 10px;
+				right: 15px;
+				font-size: 24px;
+				cursor: pointer;
+			}
+			.form-grid {
+				display: grid;
+				gap: 10px;
+				margin-top: 15px;
+			}
+		</style>";
+	
+		// Wartelisten-Button
+		$output .= "<a href='#' class='event_hour_booking_waitinglist id-" . esc_attr($args['event_hours_id']) . " waitlist' title='Kurs ausgebucht - Auf die Warteliste setzen' onclick='openWaitlistOverlay(" . esc_attr($args['event_hours_id']) . "); return false;'>Warteliste</a>";
+	
+		// Overlay-Formular (versteckt)
+		$output .= "<div id='waitlist-overlay-" . esc_attr($args['event_hours_id']) . "' class='waitlist-overlay'>
+						<div class='waitlist-overlay-content'>
+							<span class='close-overlay' onclick='closeWaitlistOverlay(" . esc_attr($args['event_hours_id']) . ");'>&times;</span>
+							<h2>Auf die Warteliste setzen</h2>
+							<p>Dieser Kurs ist ausgebucht. Bitte tragen Sie Ihre Daten ein, um auf die Warteliste gesetzt zu werden.</p>
+							<form method='post' action=''>
+								<input type='hidden' name='event_hours_id' value='" . esc_attr($args['event_hours_id']) . "'>
+								<div class='form-grid'>
+									<input type='email' name='waitlist_email' placeholder='Ihre E-Mail-Adresse' required>
+									<input type='text' name='member_id' placeholder='Mitgliedsnummer' required>
+								</div>
+								<div style='margin-top: 10px; text-align: left;'>
+									<label>
+										<input type='checkbox' name='data_protection' required> Ich stimme der Verarbeitung meiner Daten gemäß der <a href='#'>Datenschutzerklärung</a> zu.
+									</label>
+								</div>
+								<input type='submit' name='join_waitlist' value='Auf die Warteliste setzen' style='margin-top: 15px;'>
+							</form>
+						</div>
+					</div>";
+	
+		// JavaScript zum Öffnen und Schließen des Overlays
+		$output .= "<script>
+						function openWaitlistOverlay(eventHoursId) {
+							document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'block';
+						}
+						function closeWaitlistOverlay(eventHoursId) {
+							document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'none';
+						}
+					</script>";
+	}	
 	else
 	{
 		$event = array($args);
