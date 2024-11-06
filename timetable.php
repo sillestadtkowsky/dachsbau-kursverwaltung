@@ -51,6 +51,27 @@ if(function_exists("register_sidebar"))
 	));
 }
 
+function install_waitlist_table() {
+    global $wpdb;
+
+    $table_name = $wpdb->prefix . 'waitlist';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        event_id BIGINT(20) UNSIGNED NOT NULL,
+        user_email VARCHAR(255) NOT NULL,
+        date_registered DATETIME NOT NULL,
+        PRIMARY KEY (id),
+        FOREIGN KEY (event_id) REFERENCES {$wpdb->prefix}posts(ID) ON DELETE CASCADE
+    ) $charset_collate;";
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    dbDelta($sql);
+}
+
+register_activation_hook(__FILE__, 'install_waitlist_table');
+
 function timetable_init()
 {
 	//phpMailer
