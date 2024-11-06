@@ -2386,6 +2386,16 @@ function timetable_prepare_booking_button($args)
 	}
 	elseif(!$args['available_slots']) {
 
+				// Prüfen, ob die Warteliste aktiviert ist
+		$waitinglist_active = get_option('so_kurs_waitinglist_active');
+		$waitinglist_admin_only = get_option('so_kurs_waitinglist_active_admin');
+
+		// Wenn die Warteliste deaktiviert ist oder nur für Admins sichtbar sein soll und der Benutzer kein Admin ist, wird nichts angezeigt
+		if (!$waitinglist_active || ($waitinglist_admin_only && !current_user_can('administrator'))) {
+			$output .= "<a href='' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " unavailable' style='" . (strlen($args['unavailable_text_color']) ? " color: #" . esc_attr($args['unavailable_text_color']) . " !important;" : "") . (strlen($args['unavailable_bg_color']) ? " background-color: #" . esc_attr($args['unavailable_bg_color']) . " !important;" : "") . "' title='" . esc_attr($args['unavailable_label']) . "'>" . $args['unavailable_label'] . "</a>";
+		}else{
+
+
 		// Inline-CSS für das Overlay und die Warteliste
 		$output .= "<style>
 				.event_hour_booking_waitinglist{
@@ -2475,6 +2485,11 @@ function timetable_prepare_booking_button($args)
 								<p>Dieser Kurs ist ausgebucht. Bitte tragen Sie Ihre Daten ein, um auf die Warteliste gesetzt zu werden.</p>
 								<form method='post' action=''>
 									<input type='hidden' name='event_hours_id' value='" . esc_attr($args['event_hours_id']) . "'>
+									<input type='hidden' name='event_title' value='" . esc_attr($args['title']) . "'>
+                					<input type='hidden' name='event_date' value='" . esc_attr($args['week_name']) . "'>
+                					<input type='hidden' name='start' value='" . esc_attr($args['start']) . "'>
+                					<input type='hidden' name='end' value='" . esc_attr($args['end']) . "'>
+
 									<div class='form-grid'>
 										<input type='email' name='waitlist_email' placeholder='Ihre E-Mail-Adresse' value='" . esc_attr($_POST['waitlist_email'] ?? '') . "' required>
 										<input type='text' name='member_id' placeholder='Mitgliedsnummer' value='" . esc_attr($_POST['member_id'] ?? '') . "' required>
@@ -2499,6 +2514,7 @@ function timetable_prepare_booking_button($args)
 								document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'none';
 							}
 						</script>";
+			}
 		}
 	else
 	{

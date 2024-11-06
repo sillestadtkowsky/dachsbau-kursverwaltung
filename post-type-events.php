@@ -181,6 +181,10 @@ function process_waitlist_submission() {
         $event_hours_id = intval($_POST['event_hours_id']);
         $waitlist_email = sanitize_email($_POST['waitlist_email']);
         $member_id = sanitize_text_field($_POST['member_id']);
+        $event_title = sanitize_text_field($_POST['event_title'] ?? ''); // Kursname aus POST-Daten
+        $event_date = sanitize_text_field($_POST['event_date'] ?? '');   // Kursdatum
+        $start = sanitize_text_field($_POST['start'] ?? '');             // Startzeit
+        $end = sanitize_text_field($_POST['end'] ?? '');                 // Endzeit
 
         // Mitgliedsnummer prüfen
         $member = MEMBERS_CHECK::checkMeberByNumber($member_id);
@@ -227,20 +231,30 @@ function process_waitlist_submission() {
             array('%d', '%s', '%s', '%s')
         );
 
-        // Überprüfe, ob ein Fehler beim Einfügen auftrat
-        if ($wpdb->last_error) {
-            $message = 'Datenbankfehler: ' . $wpdb->last_error;
-        } else {
+        // Überprüfen, ob das Einfügen erfolgreich war und E-Mail senden
+        if (!$wpdb->last_error) {
+            // E-Mail-Bestätigung an den Nutzer senden
+            $email_args = array(
+                'member_email' => $waitlist_email,
+                'event_title' => $event_title,
+                'event_date' => $event_date,
+                'start' => $start,
+                'end' => $end
+            );
+            sendWaitlistConfirmationMail($email_args);
+
             $message = 'Sie wurden erfolgreich auf die Warteliste gesetzt.';
+        } else {
+            $message = 'Datenbankfehler: ' . $wpdb->last_error;
         }
 
         // Erfolgsmeldung im Overlay anzeigen
-        echo "<div id='waitlist-message-overlay' class='waitlist-overlay' style='display: block;'>
-                <div class='waitlist-overlay-content'>
-                    <span class='close-overlay' onclick='closeWaitlistMessageOverlay()'>&times;</span>
-                    <p>$message</p>
-                </div>
-              </div>";
+		echo "<div id='waitlist-message-overlay' class='waitlist-overlay' style='display: block;'>
+				<div class='waitlist-overlay-content'>
+					<span class='close-overlay' onclick='closeWaitlistMessageOverlay()'>&times;</span>
+					<p class='message-text'>$message</p>
+				</div>
+			</div>";
 
         // JavaScript für das Schließen des Overlays
         echo "<script>
@@ -251,6 +265,37 @@ function process_waitlist_submission() {
     }
 }
 add_action('wp', 'process_waitlist_submission');
+
+
+function sendWaitlistConfirmationMail($args) {
+    // Kurs- und E-Mail-Informationen
+    $member_email = $args['member_email'];
+    $event_title = $args['event_title'];
+    $event_date = $args['event_date'];
+    $start_time = $args['start'];
+    $end_time = $args['end'];
+    
+    // E-Mail-Betreff und -Inhalt
+    $subject = "Bestätigung deiner Wartelistenanmeldung für " . $event_title;
+    $message = '<div>';
+    $message .= '<div><b>Lieber Teilnehmer,</b></div>';
+    $message .= '<div>du wurdest erfolgreich auf die Warteliste gesetzt.</div>';
+    $message .= '<h3>Details zur Wartelisten-Anmeldung:</h3>';
+    $message .= '<div><b>Kurs:</b> ' . esc_html($event_title) . '</div>';
+    $message .= '<div><b>Datum:</b> ' . esc_html($event_date) . '</div>';
+    $message .= '<div><b>Uhrzeit:</b> ' . esc_html($start_time) . ' - ' . esc_html($end_time) . '</div>';
+    $message .= '<p>Wir informieren dich, sobald ein Platz im Kurs frei wird und du nachrücken kannst.</p>';
+    $message .= '<br>' . nl2br(get_option('so_coach_mail_footer')) . '<br><img id="bild_vorschau" src="' . esc_url(get_option('so_coach_mail_footer_logo_url')) . '" style="max-width: 100px; max-height: 100px;"/>';
+    $message .= '</div>';
+
+    // Zusätzliche Header
+    $to = $member_email;
+    $headers = 'From: Karowerdachse Trainer <' . get_option('so_coach_mail_to') . '>' . "\r\n";
+    $headers .= 'Content-Type: text/html; charset=UTF-8' . "\r\n";
+
+    // E-Mail senden
+    wp_mail($to, $subject, $message, $headers);
+}
 
 
 //Adds a box to the right column and to the main column on the Events edit screens

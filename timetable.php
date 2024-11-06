@@ -5,7 +5,7 @@ Plugin Name: Kursverwaltung für den Dachsbau
  * Description: "Kursverwaltung für den Dachsbau" ist ein leistungsstarkes und benutzerfreundliches Zeitplan-Plugin für WordPress. Es hilft Ihnen, in wenigen Minuten eine Zeitplanansicht Ihrer Veranstaltungen zu erstellen. Es ist perfekt für Sportunterricht, Schul- oder Kindergartenklassen, medizinische Abteilungen, Nachtclubs, Unterrichtspläne, Essenspläne usw. Es wird mit einem Veranstaltungsmanager, einem Shortcode für Veranstaltungsereignisse, einem Timetable Shortcode Generator und einem Widget für bevorstehende Veranstaltungen geliefert.
  * Author: QuanticaLabs (edit by Silvio Osowsky)
  * Author URI: https://1.envato.market/quanticalabs-portfolio-codecanyon
- * Version: 7.4.11
+ * Version: 7.5.00
  * Requires at least: 6.4.0
 */
 
@@ -57,20 +57,32 @@ function install_waitlist_table() {
     $table_name = $wpdb->prefix . 'waitlist';
     $charset_collate = $wpdb->get_charset_collate();
 
-    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+    // SQL-Anweisung für die Tabelle
+    $sql = "CREATE TABLE $table_name (
         id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
         event_id BIGINT(20) UNSIGNED NOT NULL,
         user_email VARCHAR(255) NOT NULL,
+        member_id VARCHAR(255) NOT NULL,
         date_registered DATETIME NOT NULL,
-        PRIMARY KEY (id),
-        FOREIGN KEY (event_id) REFERENCES {$wpdb->prefix}posts(ID) ON DELETE CASCADE
+        PRIMARY KEY (id)
     ) $charset_collate;";
 
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+    // SQL-Anweisung über dbDelta ausführen
     dbDelta($sql);
+
+    // Fehlerprotokollierung zur Überprüfung
+    if ($wpdb->last_error) {
+        error_log("Error creating table $table_name: " . $wpdb->last_error);
+    } else {
+        error_log("Table $table_name created or updated successfully.");
+    }
 }
 
+// Plugin-Aktivierung registrieren
 register_activation_hook(__FILE__, 'install_waitlist_table');
+
 
 function timetable_init()
 {
