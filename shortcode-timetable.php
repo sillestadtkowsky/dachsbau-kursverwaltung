@@ -2344,201 +2344,126 @@ function timetable_vc_dropdownmultiple_settings_field($settings, $value)
 
 function timetable_prepare_booking_button($args)
 {
-	$args = shortcode_atts(array(
-		'show_booking_button' => 'no',
-		'show_available_slots' => 'no',
-		'available_slots_singular_label' => '{number_available}/{number_total} slot available',
-		'available_slots_plural_label' => '{number_available}/{number_total} slots available',
-		'booking_label' => 'Book now',
-		'booked_label' => 'Booked',
-		'unavailable_label' => 'Unavailable',
-		'booking_text_color' => 'FFFFFF',
-		'booking_bg_color' => '05BB90',
-		'booking_hover_text_color' => 'FFFFFF',
-		'booking_hover_bg_color' => '07B38A',
-		'booked_text_color' => 'AAAAAA',
-		'booked_bg_color' => 'EEEEEE',
-		'unavailable_text_color' => 'AAAAAA',
-		'unavailable_bg_color' => 'EEEEEE',
-		'available_slots_color' => 'FFD544',
-		'timetable_page_id' => '',
-		'event_hours_id' => '',
-		'redirect' => 'no',
-		'current_user_booking_count' => '',
-		'slots_per_user' => '',
-		'available_slots' => '',
-		'start' => '',
-		'end' => '',
-		'week_name' => '',
-		'name' => '',
-		'title' => '',
-	), $args);
-	
-	
-	$output = '';
-	$booking_url = '#';
-	if($args['timetable_page_id']>0)
-		$booking_url = get_permalink($args['timetable_page_id']) . '#book-event-hour-' . $args['event_hours_id'];
+    global $wpdb;
 
-	if($args['current_user_booking_count']>=$args['slots_per_user'] && $args['slots_per_user']>0)
-	{
-		$output .= "<a href='' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " booked' style='" . (strlen($args['booked_text_color']) ? " color: #" . esc_attr($args['booked_text_color']) . " !important;" : "") . (strlen($args['booked_bg_color']) ? " background-color: #" . esc_attr($args['booked_bg_color']) . " !important;" : "") . "' title='" . esc_attr($args['booked_label']) . "'>" . $args['booked_label'] . "</a>";
-	}
-	elseif(!$args['available_slots']) {
+    // Argumente aus Shortcode-Attributen
+    $args = shortcode_atts(array(
+        'show_booking_button' => 'no',
+        'show_available_slots' => 'no',
+        'available_slots_singular_label' => '{number_available}/{number_total} slot available',
+        'available_slots_plural_label' => '{number_available}/{number_total} slots available',
+        'booking_label' => 'Book now',
+        'booked_label' => 'Booked',
+        'unavailable_label' => 'Unavailable',
+        'booking_text_color' => 'FFFFFF',
+        'booking_bg_color' => '05BB90',
+        'booking_hover_text_color' => 'FFFFFF',
+        'booking_hover_bg_color' => '07B38A',
+        'booked_text_color' => 'AAAAAA',
+        'booked_bg_color' => 'EEEEEE',
+        'unavailable_text_color' => 'AAAAAA',
+        'unavailable_bg_color' => 'EEEEEE',
+        'available_slots_color' => 'FFD544',
+        'timetable_page_id' => '',
+        'event_hours_id' => '',
+        'redirect' => 'no',
+        'current_user_booking_count' => '',
+        'slots_per_user' => '',
+        'available_slots' => '',
+        'start' => '',
+        'end' => '',
+        'week_name' => '',
+        'name' => '',
+        'title' => '',
+    ), $args);
+    
+    $output = '';
+    $booking_url = '#';
+    if ($args['timetable_page_id'] > 0)
+        $booking_url = get_permalink($args['timetable_page_id']) . '#book-event-hour-' . $args['event_hours_id'];
 
-				// Prüfen, ob die Warteliste aktiviert ist
-		$waitinglist_active = get_option('so_kurs_waitinglist_active');
-		$waitinglist_admin_only = get_option('so_kurs_waitinglist_active_admin');
+    // Verfügbarkeit pro User prüfen
+    if ($args['current_user_booking_count'] >= $args['slots_per_user'] && $args['slots_per_user'] > 0) {
+        $output .= "<a href='' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " booked' style='" . (strlen($args['booked_text_color']) ? " color: #" . esc_attr($args['booked_text_color']) . " !important;" : "") . (strlen($args['booked_bg_color']) ? " background-color: #" . esc_attr($args['booked_bg_color']) . " !important;" : "") . "' title='" . esc_attr($args['booked_label']) . "'>" . $args['booked_label'] . "</a>";
+    } elseif (!$args['available_slots']) {
 
-		// Wenn die Warteliste deaktiviert ist oder nur für Admins sichtbar sein soll und der Benutzer kein Admin ist, wird nichts angezeigt
-		if (!$waitinglist_active || ($waitinglist_admin_only && !current_user_can('administrator'))) {
-			$output .= "<a href='' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " unavailable' style='" . (strlen($args['unavailable_text_color']) ? " color: #" . esc_attr($args['unavailable_text_color']) . " !important;" : "") . (strlen($args['unavailable_bg_color']) ? " background-color: #" . esc_attr($args['unavailable_bg_color']) . " !important;" : "") . "' title='" . esc_attr($args['unavailable_label']) . "'>" . $args['unavailable_label'] . "</a>";
-		}else{
+        // Prüfen, ob `available_places` auf 0 steht
+        $available_places = $wpdb->get_var($wpdb->prepare("SELECT available_places FROM {$wpdb->prefix}event_hours WHERE event_hours_id = %d", $args['event_hours_id']));
 
+        if ($available_places === '0') {
+            // Wenn `available_places` auf 0 steht, wird "Geschlossen" angezeigt
+            $output .= "<a href='' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " unavailable' style='color: #" . esc_attr($args['unavailable_text_color']) . " !important; background-color: #" . esc_attr($args['unavailable_bg_color']) . " !important;' title='Geschlossen'>Geschlossen</a>";
+        } else {
+            // Warteliste anzeigen, wenn `available_places` > 0
 
-		// Inline-CSS für das Overlay und die Warteliste
-		$output .= "<style>
-				.event_hour_booking_waitinglist{
-					display: block;
-					margin: 0;
-					padding: 11px 5px 11px;
-					width: 100%;
-					font-size: 14px;
-					line-height: 18px;
-					height: auto;
-					font-weight: normal;
-					text-decoration: none !important;
-					-webkit-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
-					-moz-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
-					-o-transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
-					transition: background-color 0.2s, bottom 0.2s, top 0.2s !important;
-					-webkit-border-radius: 2px;
-					-moz-border-radius: 2px;
-					border-radius: 2px;
-					text-align: center;
-					background-color: red;
-					color: white !important;
-				}
-				.event_hour_booking_waitinglist :hover{
-					text-decoration: none;
-				}
-			    .waitlist-overlay {
-					position: fixed;
-					top: 0;
-					left: 0;
-					width: 100%;
-					height: 100%;
-					background-color: rgba(0, 0, 0, 0.8);
-					display: none;
-					z-index: 9998;
-				}
-				.waitlist-overlay-content {
-					position: relative;
-					top: 50%;
-					left: 50%;
-					transform: translate(-50%, -50%);
-					background-color: white;
-					padding: 20px;
-					border-radius: 5px;
-					width: 90%;
-					max-width: 400px;
-					text-align: center;
-					color: black;
-				}
-				.close-overlay {
-					position: absolute;
-					top: 10px;
-					right: 15px;
-					font-size: 24px;
-					cursor: pointer;
-				}
-				.form-grid {
-					display: grid;
-					gap: 10px;
-					margin-top: 15px;
-				}
-				.course-info {
-					font-weight: bold;
-					margin-bottom: 15px;
-					color: #333;
-				}
-				.error-message {
-					color: red;
-					font-weight: bold;
-					margin-top: 10px;
-					display: none;
-				}
-			</style>";
+            // Prüfen, ob die Warteliste aktiviert ist
+            $waitinglist_active = get_option('so_kurs_waitinglist_active');
+            $waitinglist_admin_only = get_option('so_kurs_waitinglist_active_admin');
 
-		// Wartelisten-Button
-		$output .= "<a href='#' class='event_hour_booking_waitinglist id-" . esc_attr($args['event_hours_id']) . " waitlist' title='Kurs ausgebucht - Auf die Warteliste setzen' onclick='openWaitlistOverlay(" . esc_attr($args['event_hours_id']) . "); return false;'>Warteliste</a>";
-	
-		// Overlay-Formular (versteckt)
-			$output .= "<div id='waitlist-overlay-" . esc_attr($args['event_hours_id']) . "' class='waitlist-overlay'>
-							<div class='waitlist-overlay-content'>
-								<span class='close-overlay' onclick='closeWaitlistOverlay(" . esc_attr($args['event_hours_id']) . ");'>&times;</span>
-								<h2>Auf die Warteliste setzen</h2>
-								<div class='course-info'>
-									<div>Kurs: " . esc_html($args['name'] ?? 'Kursname') . " (" . esc_html($args['title'] ?? 'Kurstitel') . ")</div>
-									<div>Zeit: " . esc_html($args['start'] ?? '') . " - " . esc_html($args['end'] ?? '') . " Uhr, " . esc_html($args['week_name'] ?? '') . "</div>
-								</div>
-								<p>Dieser Kurs ist ausgebucht. Bitte tragen Sie Ihre Daten ein, um auf die Warteliste gesetzt zu werden.</p>
-								<form method='post' action=''>
-									<input type='hidden' name='event_hours_id' value='" . esc_attr($args['event_hours_id']) . "'>
-									<input type='hidden' name='event_title' value='" . esc_attr($args['title']) . "'>
-                					<input type='hidden' name='event_date' value='" . esc_attr($args['week_name']) . "'>
-                					<input type='hidden' name='start' value='" . esc_attr($args['start']) . "'>
-                					<input type='hidden' name='end' value='" . esc_attr($args['end']) . "'>
+            // Wenn die Warteliste deaktiviert ist oder nur für Admins sichtbar sein soll und der Benutzer kein Admin ist, wird nichts angezeigt
+            if (!$waitinglist_active || ($waitinglist_admin_only && !current_user_can('administrator'))) {
+                $output .= "<a href='' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " unavailable' style='color: #" . esc_attr($args['unavailable_text_color']) . " !important; background-color: #" . esc_attr($args['unavailable_bg_color']) . " !important;' title='" . esc_attr($args['unavailable_label']) . "'>" . $args['unavailable_label'] . "</a>";
+            } else {
+                // Wartelisten-Button und Overlay
+                $output .= "<a href='#' class='event_hour_booking_waitinglist id-" . esc_attr($args['event_hours_id']) . " waitlist' title='Kurs ausgebucht - Auf die Warteliste setzen' onclick='openWaitlistOverlay(" . esc_attr($args['event_hours_id']) . "); return false;'>Warteliste</a>";
 
-									<div class='form-grid'>
-										<input type='email' name='waitlist_email' placeholder='Ihre E-Mail-Adresse' value='" . esc_attr($_POST['waitlist_email'] ?? '') . "' required>
-										<input type='text' name='member_id' placeholder='Mitgliedsnummer' value='" . esc_attr($_POST['member_id'] ?? '') . "' required>
-									</div>
-									<div style='margin-top: 10px; text-align: left;'>
-										<label>
-											<input type='checkbox' name='data_protection' required> Ich stimme der Verarbeitung meiner Daten gemäß der <a href='#'>Datenschutzerklärung</a> zu.
-										</label>
-									</div>
-									<div class='error-message' id='error-message'></div>
-									<input type='submit' name='join_waitlist' value='Auf die Warteliste setzen' style='margin-top: 15px;'>
-								</form>
-							</div>
-						</div>";
+                // Overlay-Formular für Warteliste
+                $output .= "<div id='waitlist-overlay-" . esc_attr($args['event_hours_id']) . "' class='waitlist-overlay'>
+                                <div class='waitlist-overlay-content'>
+                                    <span class='close-overlay' onclick='closeWaitlistOverlay(" . esc_attr($args['event_hours_id']) . ");'>&times;</span>
+                                    <h2>Auf die Warteliste setzen</h2>
+                                    <div class='course-info'>
+                                        <div>Kurs: " . esc_html($args['name'] ?? 'Kursname') . " (" . esc_html($args['title'] ?? 'Kurstitel') . ")</div>
+                                        <div>Zeit: " . esc_html($args['start'] ?? '') . " - " . esc_html($args['end'] ?? '') . " Uhr, " . esc_html($args['week_name'] ?? '') . "</div>
+                                    </div>
+                                    <p>Dieser Kurs ist ausgebucht. Bitte tragen Sie Ihre Daten ein, um auf die Warteliste gesetzt zu werden.</p>
+                                    <form method='post' action=''>
+                                        <input type='hidden' name='event_hours_id' value='" . esc_attr($args['event_hours_id']) . "'>
+                                        <input type='hidden' name='event_title' value='" . esc_attr($args['title']) . "'>
+                                        <input type='hidden' name='event_date' value='" . esc_attr($args['week_name']) . "'>
+                                        <input type='hidden' name='start' value='" . esc_attr($args['start']) . "'>
+                                        <input type='hidden' name='end' value='" . esc_attr($args['end']) . "'>
+                                        <div class='form-grid'>
+                                            <input type='email' name='waitlist_email' placeholder='Ihre E-Mail-Adresse' value='" . esc_attr($_POST['waitlist_email'] ?? '') . "' required>
+                                            <input type='text' name='member_id' placeholder='Mitgliedsnummer' value='" . esc_attr($_POST['member_id'] ?? '') . "' required>
+                                        </div>
+                                        <div style='margin-top: 10px; text-align: left;'>
+                                            <label>
+                                                <input type='checkbox' name='data_protection' required> Ich stimme der Verarbeitung meiner Daten gemäß der <a href='#'>Datenschutzerklärung</a> zu.
+                                            </label>
+                                        </div>
+                                        <div class='error-message' id='error-message'></div>
+                                        <input type='submit' name='join_waitlist' value='Auf die Warteliste setzen' style='margin-top: 15px;'>
+                                    </form>
+                                </div>
+                            </div>";
 
-			// JavaScript zum Öffnen und Schließen des Overlays
-			$output .= "<script>
-							function openWaitlistOverlay(eventHoursId) {
-								document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'block';
-							}
-							function closeWaitlistOverlay(eventHoursId) {
-								document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'none';
-							}
-						</script>";
-			}
-		}
-	else
-	{
-		$event = array($args);
+                // JavaScript zum Öffnen und Schließen des Overlays
+                $output .= "<script>
+                                function openWaitlistOverlay(eventHoursId) {
+                                    document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'block';
+                                }
+                                function closeWaitlistOverlay(eventHoursId) {
+                                    document.getElementById('waitlist-overlay-' + eventHoursId).style.display = 'none';
+                                }
+                            </script>";
+            }
+        }
+    } else {
+        // Buchungs-Logik, falls Plätze verfügbar sind
+        $event = array($args);
+        $booking_status = so_CloseOrOpenBooking($event);
+        $is_bookable = $booking_status['is_bookable'];
+        $status_text = $booking_status['status_text'];
 
-		$booking_status = so_CloseOrOpenBooking($event);
+        if ($is_bookable) {
+            $output .= "<a href='" . esc_url($booking_url) . "' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " " . ($args['redirect'] == 'yes' ? 'redirect' : '') . " ' data-event-hour-id='" . esc_attr($args['event_hours_id']) . "' style='color: #" . esc_attr($args['booking_text_color']) . " !important; background-color: #" . esc_attr($args['booking_bg_color']) . ";' title='" . esc_attr($args['booking_label']) . "'>" . $args['booking_label'] . "</a>";
+        } else {
+            $output .= $status_text;
+        }
+    }
 
-		// Greife auf den Boolean-Wert zu
-		$is_bookable = $booking_status['is_bookable'];
-
-		// Greife auf den Text zu
-		$status_text = $booking_status['status_text'];
-
-		// Gib eine Meldung aus, abhängig vom Boolean-Wert
-		if ($is_bookable) {
-			$output .= "<a href='" . esc_url($booking_url) . "' class='event_hour_booking id-" . esc_attr($args['event_hours_id']) . " " . ($args['redirect']=='yes' ? 'redirect' : '') . " ' data-event-hour-id='" . esc_attr($args['event_hours_id']) . "' style='" . (strlen($args['booking_text_color']) ? " color: #" . esc_attr($args['booking_text_color']) . " !important;" : "") . (strlen($args['booking_bg_color']) ? " background-color: #" . esc_attr($args['booking_bg_color']) . ";" : "") . "' onMouseOver='" . (strlen($args['booking_hover_text_color']) ? " this.style.setProperty(\"color\", \"#" . esc_attr($args['booking_hover_text_color']) . "\", \"important\");" : "") . (strlen($args['booking_hover_bg_color']) ? " this.style.setProperty(\"background\", \"#" . esc_attr($args['booking_hover_bg_color']) . "\", \"important\");" : "") . "' onMouseOut='" . (strlen($args['booking_hover_text_color']) ? (strlen($args['booking_hover_text_color']) ? " this.style.setProperty(\"color\", \"#" . esc_attr($args['booking_text_color']) . "\", \"important\");" : " this.style.color=\"\";") : "") . (strlen($args['booking_hover_bg_color']) ? (strlen($args['booking_hover_bg_color']) ? " this.style.setProperty(\"background\", \"#" . esc_attr($args['booking_bg_color']) . "\", \"important\");" : " this.style.background=\"\";") : "") . "' title='" . esc_attr($args['booking_label']) . "'>" . $args['booking_label'] . "</a>";
-		} else {
-			$output .= $status_text;
-		}
-	}
-	
-	$output = "<div class='event_hour_booking_wrapper " . esc_attr($args['show_booking_button']) . "'>" . $output . "</div>";
-	
-	return $output;
+    return $output;
 }
 
 
