@@ -162,90 +162,46 @@ add_action('init', 'timetable_init');
 
 function timetable_cancel_booking()
 {
-	if(!(array_key_exists('action', $_GET) && $_GET['action']==='timetable_cancel_booking'))
+	if (!(array_key_exists('action', $_GET) && $_GET['action'] === 'timetable_cancel_booking')) {
 		return;
-	
+	}
+
 	$booking_id = array_key_exists('booking_id', $_GET) ? $_GET['booking_id'] : 0;
 	$validation_code = array_key_exists('validation_code', $_GET) ? $_GET['validation_code'] : '';
 	$bookings_ids = array_key_exists('bookings_ids', $_GET) ? explode(',', $_GET['bookings_ids']) : array();
 	$validation_codes = array_key_exists('validation_codes', $_GET) ? explode(',', $_GET['validation_codes']) : array();
-	
+
 	$bookings_ids[] = $booking_id;
 	$validation_codes[] = $validation_code;
-	
-	//get all booking details
+
+	// Buchungsdetails holen
 	$bookings = array();
-	if(count($bookings_ids) && count($bookings_ids)==count($validation_codes))
-	{
-		for($i=0, $max_i = count($bookings_ids); $i<$max_i; $i++)
-		{
-			if($bookings_ids[$i]>0 && strlen($validation_codes[$i])==32)
-			{
+	if (count($bookings_ids) && count($bookings_ids) == count($validation_codes)) {
+		for ($i = 0, $max_i = count($bookings_ids); $i < $max_i; $i++) {
+			if ($bookings_ids[$i] > 0 && strlen($validation_codes[$i]) == 32) {
 				$result = TT_DB::getBookings(array(
 					'booking_id' => $bookings_ids[$i],
 					'validation_code' => $validation_codes[$i],
 				));
-				if(isset($result[0]['booking_id']) && $result[0]['booking_id']==$bookings_ids[$i]){
+
+				if (isset($result[0]['booking_id']) && $result[0]['booking_id'] == $bookings_ids[$i]) {
 					$bookings[] = $result[0];
-				}else{
-					echo '<style>
-						.error-storno{
-							display: grid;
-							position: inline;
-							justify-content: center;
-							align-items: flex-start;
-							text-align: center;
-							margin:20px;
-							padding:10px;
-							background-color:#ff2600;
-							color:white;}
-						.error-storno p{
-							font-size:1.2em;}
-						</style>';
-					echo '<div class="error-storno"><p><strong>' . sprintf(esc_html__('Uppsss...', 'timetable'), $bookings_ids[$i]) . '</strong></p><br>';
-					echo '<p><strong>' . sprintf(esc_html__('Die Buchung mit der Nummer #%d existiert leider in unserem System nicht.', 'timetable'), $bookings_ids[$i]) . '<strong></p><br></div>';
+				} else {
+					// Fehlerhafte Buchung - Weiterleitung zur Startseite mit Fehlerparameter
+					wp_redirect(home_url('/?storno=error'));
+					exit;
 				}
 			}
 		}
 	}
-	if(!count($bookings))
-		return;
-	
-	//delete bookings and display their details
-	foreach($bookings as $booking)
-	{
-		//delete booking
-		TT_DB::deleteBooking($booking['booking_id']);
-		//display booking information
-		echo '<style>
-			.success-storno{
-				display: grid;
-				position: inline;
-				justify-content: center;
-				align-items: flex-start;
-				text-align: center;
-				margin:20px;
-				padding:10px;
-				background-color:#00A27C;
-				color:white;}
-			.success-storno p{
-				font-size:1.2em;}
-			</style>';
-		echo '<div class="success-storno"><b>' . sprintf(esc_html__('Deine Buchung #%d (%s) wurde storniert.', 'timetable'), $booking['booking_id'], $booking['booking_datetime']) . '</b><br>';		
-		echo sprintf(esc_html__('Kursname: %s', 'timetable'), $booking['event_title']) . '<br>';
-		$eventDate = $booking['eventDate'];
-		$formattedDate = date('d.m.Y', strtotime($eventDate));
-		echo sprintf(esc_html__('Datum: %s', 'timetable'), $formattedDate) . '<br>';
-		echo sprintf(esc_html__('Uhrzeit: %s', 'timetable'), $booking['start'] . '-' . $booking['end']) . '<br>';
-		echo sprintf(esc_html__('Ort: %s', 'timetable'), $booking['weekday']) . '<br>';
-		if($booking['event_description_1'])
-			echo sprintf(esc_html__('Hinweis 1: %s', 'timetable'), $booking['event_description_1']) . '<br>';
-		if($booking['event_description_2'])
-			echo sprintf(esc_html__('Hinweis 2: %s', 'timetable'), $booking['event_description_2']) . '<br>';
-		echo '</div><br>';
+
+	if (!count($bookings)) {
+		// Keine gültigen Buchungen gefunden
+		wp_redirect(home_url('/?storno=error'));
+		exit;
 	}
 
-	//send email to client
+	// Buchungen löschen und Bestätigungsmail vorbereiten
 	$timetable_contact_form_options = timetable_stripslashes_deep(get_option("timetable_contact_form_options"));
 	$admin_name = $timetable_contact_form_options['admin_name'];
 	$admin_email = $timetable_contact_form_options['admin_email'];
@@ -254,54 +210,122 @@ function timetable_cancel_booking()
 	$client_name = '';
 	$client_email = '';
 	$client_phone = '';
-	if($bookings[0]['user_id']>0)
-	{
+
+	if ($bookings[0]['user_id'] > 0) {
 		$client_name = $bookings[0]['user_name'];
 		$client_email = $bookings[0]['user_email'];
-	}
-	else
-	{
+	} else {
 		$client_name = $bookings[0]['guest_name'];
 		$client_email = $bookings[0]['guest_email'];
 		$client_phone = $bookings[0]['guest_phone'];
 	}
-	
+
+	// E-Mail-Vorbereitung
 	$headers = array();
-	//$headers[] = 'to: ' . $client_name . ' <' . $client_email . '>' . "\r\n";
-	$headers[] = 'From: ' . (!empty($admin_name_from) ? $admin_name_from : $admin_name) . ' <' . (!empty($admin_email_from) ? $admin_email_from : $admin_email) . '>' . "\r\n";
+	$headers[] = 'From: ' . (!empty($admin_name_from) ? $admin_name_from : $admin_name) . ' <' . (!empty($admin_email_from) ? $admin_email_from : $admin_email) . '>';
 	$headers[] = 'Content-type: text/html';
+
 	$subject = esc_html__('Deine Stornierungsbestätigung', 'timetable');
-	$body = '';
-	
-	$body .= '<h3>' . esc_html__('Deine Stornierungsbestätigung', 'timetable') . '</h3>';
+	$body = '<h3>' . esc_html__('Deine Stornierungsbestätigung', 'timetable') . '</h3>';
 	$body .= sprintf(esc_html__('Name: %s', 'timetable'), $client_name) . '<br>';
 	$body .= sprintf(esc_html__('Email: %s', 'timetable'), $client_email) . '<br>';
-	if($client_phone)
-		$body .= sprintf(esc_html__('Phone: %s', 'timetable'), $client_phone) . '<br>';
-	$body .= '<br>';
-	$body .= '<h3>' . esc_html__('Deine Kursbuchung wurde storniert.', 'timetable') . '</h3>';
-	foreach($bookings as $booking)
-	{
+	if ($client_phone) {
+		$body .= sprintf(esc_html__('Telefon: %s', 'timetable'), $client_phone) . '<br>';
+	}
+	$body .= '<br><h3>' . esc_html__('Deine Kursbuchung wurde storniert.', 'timetable') . '</h3>';
+
+	foreach ($bookings as $booking) {
+		TT_DB::deleteBooking($booking['booking_id']); // Buchung löschen
+
+		// Buchungsdetails in der E-Mail hinzufügen
 		$body .= sprintf(esc_html__('Buchung: #%d (%s)', 'timetable'), $booking['booking_id'], $booking['booking_datetime']) . '<br>';
 		$body .= sprintf(esc_html__('Kursname: %s', 'timetable'), $booking['event_title']) . '<br>';
-		$eventDate = $booking['eventDate'];
-		$formattedDate = date('d.m.Y', strtotime($eventDate));
-		$body .= sprintf(esc_html__('Tag: %s', 'timetable'), $formattedDate) . '<br>';
+		$formattedDate = date('d.m.Y', strtotime($booking['eventDate']));
+		$body .= sprintf(esc_html__('Datum: %s', 'timetable'), $formattedDate) . '<br>';
 		$body .= sprintf(esc_html__('Uhrzeit: %s', 'timetable'), $booking['start'] . '-' . $booking['end']) . '<br>';
 		$body .= sprintf(esc_html__('Ort: %s', 'timetable'), $booking['weekday']) . '<br>';
-		if($booking['event_description_1'])
+		if ($booking['event_description_1']) {
 			$body .= sprintf(esc_html__('Hinweis 1: %s', 'timetable'), $booking['event_description_1']) . '<br>';
-		if($booking['event_description_2'])
+		}
+		if ($booking['event_description_2']) {
 			$body .= sprintf(esc_html__('Hinweis 2: %s', 'timetable'), $booking['event_description_2']) . '<br>';
+		}
 		$body .= '<br>';
-		$body .= sprintf('<div><p>Bis demnächst und liebe Grüße aus dem Dachsbau.</p><p>Sporttreff Karower Dachse e.V. </br>Achillesstr. 57</br>13125 Berlin </br></p><p>Telefon: 030 / 946 33 570</br>www.karowerdachse.de') . '<br>';
 	}
 
-	wp_mail($client_name . ' <' . $client_email . '>', $subject, $body, $headers);
-	return;
-}
+	$body .= '<p>Bis demnächst und liebe Grüße aus dem Dachsbau.</p>';
+	$body .= '<p>Sporttreff Karower Dachse e.V. <br>Achillesstr. 57<br>13125 Berlin<br></p>';
+	$body .= '<p>Telefon: 030 / 946 33 570<br>www.karowerdachse.de</p>';
 
+	// E-Mail senden
+	wp_mail($client_name . ' <' . $client_email . '>', $subject, $body, $headers);
+
+	// Weiterleitung zur Startseite mit Erfolgs-Parameter
+	wp_redirect(home_url('/?storno=success'));
+	exit;
+}
 add_action('init', 'timetable_cancel_booking');
+
+function display_storno_feedback() {
+    if (isset($_GET['storno'])) {
+        $is_success = $_GET['storno'] === 'success';
+        $message = $is_success 
+            ? "Deine Kursbuchung wurde erfolgreich storniert." 
+            : "Problem: Die Kursbuchung konnte nicht gefunden werden. Sie ist im System nicht vorhanden.";
+
+        $backgroundColor = $is_success ? '#28a745' : '#ff2600';
+        
+        echo "<div class='storno-overlay-background'></div>
+              <div class='storno-overlay' style='background-color: $backgroundColor;'>
+                <span class='close-overlay' onclick='closeStornoOverlay()'>&times;</span>
+                <p style='font-size: 20px;'>" . esc_html($message) . "</p>
+              </div>
+              <style>
+                .storno-overlay-background {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5); /* Halbtransparentes Schwarz */
+                    z-index: 9998;
+                }
+                .storno-overlay {
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    padding: 20px;
+                    border-radius: 5px;
+                    width: 80%;
+                    max-width: 400px;
+                    color: #fff;
+                    text-align: center;
+                    font-size: 18px;
+                    z-index: 9999;
+                }
+                .storno-overlay .close-overlay {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    font-size: 20px;
+                    cursor: pointer;
+                    color: #fff;
+                }
+              </style>
+              <script>
+                function closeStornoOverlay() {
+                    document.querySelector('.storno-overlay').style.display = 'none';
+                    document.querySelector('.storno-overlay-background').style.display = 'none';
+                }
+                setTimeout(function() {
+                    closeStornoOverlay();
+                }, 5000); // Automatisches Ausblenden nach 5 Sekunden
+              </script>";
+    }
+}
+add_action('wp_footer', 'display_storno_feedback');
+
 
 function timetable_phpmailer_init($mail) 
 {
