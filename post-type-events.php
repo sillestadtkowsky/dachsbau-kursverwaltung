@@ -173,57 +173,54 @@ function timetable_events_init()
 add_action("init", "timetable_events_init"); 
 
 function process_waitlist_submission() {
-    // Überprüfen, ob das Formular abgesendet wurde und die Datenschutzerklärung akzeptiert wurde
     if (isset($_POST['join_waitlist']) && !empty($_POST['waitlist_email']) && !empty($_POST['event_hours_id']) && !empty($_POST['member_id']) && isset($_POST['data_protection'])) {
         global $wpdb;
 
-        // Bereite die Daten vor
-        $event_hours_id = intval($_POST['event_hours_id']);
+        // Daten vorbereiten
+        $event_id = intval($_POST['event_hours_id']);
         $waitlist_email = sanitize_email($_POST['waitlist_email']);
         $member_id = sanitize_text_field($_POST['member_id']);
-        $event_title = sanitize_text_field($_POST['event_title'] ?? ''); // Kursname aus POST-Daten
-        $event_date = sanitize_text_field($_POST['event_date'] ?? '');   // Kursdatum
-        $start = sanitize_text_field($_POST['start'] ?? '');             // Startzeit
-        $end = sanitize_text_field($_POST['end'] ?? '');                 // Endzeit
+        $event_title = isset($_POST['event_title']) ? sanitize_text_field($_POST['event_title']) : 'Kursname unbekannt';
+        $event_date = isset($_POST['event_date']) ? sanitize_text_field($_POST['event_date']) : 'Datum unbekannt';
+        $start = isset($_POST['start']) ? sanitize_text_field($_POST['start']) : 'Startzeit unbekannt';
+        $end = isset($_POST['end']) ? sanitize_text_field($_POST['end']) : 'Endzeit unbekannt';
 
         // Mitgliedsnummer prüfen
         $member = MEMBERS_CHECK::checkMeberByNumber($member_id);
         if ($member == 0) {
-            // Zeige eine Fehlermeldung im Formular an, wenn die Mitgliedsnummer ungültig ist und öffne das Overlay erneut
             echo "<script>
                     document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('error-message').style.display = 'block';
                         document.getElementById('error-message').innerHTML = 'Gib bitte eine gültige Mitgliedsnummer ein. (NUR <u>EINE</u> MITGLIEDNUMMER ERLAUBT)';
-                        document.getElementById('waitlist-overlay-$event_hours_id').style.display = 'block';
+                        document.getElementById('waitlist-overlay-$event_id').style.display = 'block';
                     });
                   </script>";
             return;
         }
 
-        // Verhindere doppelte Einträge anhand der Mitgliedsnummer
+        // Verhindere doppelte Einträge
         $existing_entry = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$wpdb->prefix}waitlist WHERE event_id = %d AND member_id = %s",
-            $event_hours_id,
+            $event_id,
             $member_id
         ));
 
         if ($existing_entry > 0) {
-            // Zeige eine Fehlermeldung, wenn der Nutzer bereits für diesen Kurs auf der Warteliste ist
             echo "<script>
                     document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('error-message').style.display = 'block';
                         document.getElementById('error-message').innerHTML = 'Sie sind bereits auf der Warteliste für diesen Kurs.';
-                        document.getElementById('waitlist-overlay-$event_hours_id').style.display = 'block';
+                        document.getElementById('waitlist-overlay-$event_id').style.display = 'block';
                     });
                   </script>";
             return;
         }
 
-        // Füge den Eintrag zur Warteliste hinzu, wenn noch kein Eintrag vorhanden ist
+        // Eintrag in die Warteliste hinzufügen
         $wpdb->insert(
             "{$wpdb->prefix}waitlist",
             array(
-                'event_id' => $event_hours_id,
+                'event_id' => $event_id,
                 'user_email' => $waitlist_email,
                 'member_id' => $member_id,
                 'date_registered' => current_time('mysql')
@@ -231,15 +228,19 @@ function process_waitlist_submission() {
             array('%d', '%s', '%s', '%s')
         );
 
-        // Überprüfen, ob das Einfügen erfolgreich war und E-Mail senden
         if (!$wpdb->last_error) {
-            // E-Mail-Bestätigung an den Nutzer senden
+            // Die ID des neuen Wartelisten-Eintrags auslesen
+            $waitlist_id = $wpdb->insert_id;
+
+            // Übergabe der Daten, einschließlich der neuen `waitlist_id`
             $email_args = array(
                 'member_email' => $waitlist_email,
                 'event_title' => $event_title,
                 'event_date' => $event_date,
                 'start' => $start,
-                'end' => $end
+                'end' => $end,
+                'event_id' => $event_id,
+                'waitlist_id' => $waitlist_id // Übergabe der ID an die E-Mail-Funktion
             );
             sendWaitlistConfirmationMail($email_args);
 
@@ -248,15 +249,13 @@ function process_waitlist_submission() {
             $message = 'Datenbankfehler: ' . $wpdb->last_error;
         }
 
-        // Erfolgsmeldung im Overlay anzeigen
-		echo "<div id='waitlist-message-overlay' class='waitlist-overlay' style='display: block;'>
-				<div class='waitlist-overlay-content'>
-					<span class='close-overlay' onclick='closeWaitlistMessageOverlay()'>&times;</span>
-					<p class='message-text'>$message</p>
-				</div>
-			</div>";
+        echo "<div id='waitlist-message-overlay' class='waitlist-overlay' style='display: block;'>
+                <div class='waitlist-overlay-content'>
+                    <span class='close-overlay' onclick='closeWaitlistMessageOverlay()'>&times;</span>
+                    <p>$message</p>
+                </div>
+              </div>";
 
-        // JavaScript für das Schließen des Overlays
         echo "<script>
                 function closeWaitlistMessageOverlay() {
                     document.getElementById('waitlist-message-overlay').style.display = 'none';
@@ -268,14 +267,18 @@ add_action('wp', 'process_waitlist_submission');
 
 
 function sendWaitlistConfirmationMail($args) {
-    // Kurs- und E-Mail-Informationen
     $member_email = $args['member_email'];
     $event_title = $args['event_title'];
     $event_date = $args['event_date'];
     $start_time = $args['start'];
     $end_time = $args['end'];
-    
-    // E-Mail-Betreff und -Inhalt
+    $event_id = $args['event_id'];
+    $waitlist_id = $args['waitlist_id'];
+
+    // Token für den Löschlink erstellen
+    $token = urlencode(base64_encode($member_email . '|' . $event_id . '|' . $waitlist_id));
+    $unsubscribe_link = site_url() . "/?remove_from_waitlist=1&token=$token";
+
     $subject = "Bestätigung deiner Wartelistenanmeldung für " . $event_title;
     $message = '<div>';
     $message .= '<div><b>Lieber Teilnehmer,</b></div>';
@@ -284,18 +287,128 @@ function sendWaitlistConfirmationMail($args) {
     $message .= '<div><b>Kurs:</b> ' . esc_html($event_title) . '</div>';
     $message .= '<div><b>Datum:</b> ' . esc_html($event_date) . '</div>';
     $message .= '<div><b>Uhrzeit:</b> ' . esc_html($start_time) . ' - ' . esc_html($end_time) . '</div>';
-    $message .= '<p>Wir informieren dich, sobald ein Platz im Kurs frei wird und du nachrücken kannst.</p>';
-    $message .= '<br>' . nl2br(get_option('so_coach_mail_footer')) . '<br><img id="bild_vorschau" src="' . esc_url(get_option('so_coach_mail_footer_logo_url')) . '" style="max-width: 100px; max-height: 100px;"/>';
+    $message .= '<p>Falls du dich von der Warteliste entfernen möchtest, klicke bitte <a href="' . esc_url($unsubscribe_link) . '">hier</a>.</p>';
+	$message .= '<p>' . nl2br(get_option('so_coach_mail_footer')) . '<br><img id="bild_vorschau" src="' . esc_url(get_option('so_coach_mail_footer_logo_url')) . '" style="max-width: 100px; max-height: 100px;"/></p>';
     $message .= '</div>';
 
-    // Zusätzliche Header
     $to = $member_email;
-    $headers = 'From: Karowerdachse Trainer <' . get_option('so_coach_mail_to') . '>' . "\r\n";
+    $headers = 'From: Dachsbau <' . get_option('so_coach_mail_to') . '>' . "\r\n";
     $headers .= 'Content-Type: text/html; charset=UTF-8' . "\r\n";
 
-    // E-Mail senden
     wp_mail($to, $subject, $message, $headers);
 }
+
+function remove_from_waitlist() {
+    if (isset($_GET['remove_from_waitlist']) && $_GET['remove_from_waitlist'] == 1 && isset($_GET['token'])) {
+        global $wpdb;
+        $token = sanitize_text_field($_GET['token']);
+        
+        // Entschlüsselung des Tokens
+        list($user_email, $event_id, $waitlist_id) = explode('|', base64_decode(urldecode($token)));
+
+        // Überprüfen, ob der Eintrag existiert
+        $table_name = $wpdb->prefix . 'waitlist';
+        $entry_exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name WHERE id = %d AND event_id = %d AND user_email = %s",
+            $waitlist_id,
+            $event_id,
+            $user_email
+        ));
+
+        if ($entry_exists) {
+            // Eintrag aus der Warteliste löschen
+            $wpdb->delete(
+                $table_name,
+                array(
+                    'id' => $waitlist_id,
+                    'event_id' => $event_id,
+                    'user_email' => $user_email
+                ),
+                array('%d', '%d', '%s')
+            );
+
+            // Bestätigungs-E-Mail über die Stornierung
+            $subject = "Deine Wartelistenanmeldung für den Kurs wurde storniert";
+            $message = "<p>Hallo lieber Dachs,</p>";
+            $message .= "<p>du wurdest erfolgreich von der Warteliste entfernt. Falls du dies nicht veranlasst hast, kontaktiere uns bitte.</p>";
+            $message .= '<p>' . nl2br(get_option('so_coach_mail_footer')) . '<br><img id="bild_vorschau" src="' . esc_url(get_option('so_coach_mail_footer_logo_url')) . '" style="max-width: 100px; max-height: 100px;"/></p>';
+
+            $headers = 'From: Dachsbau <' . get_option('so_coach_mail_to') . '>' . "\r\n";
+            $headers .= 'Content-Type: text/html; charset=UTF-8' . "\r\n";
+
+            wp_mail($user_email, $subject, $message, $headers);
+
+            // Benutzer zur Startseite mit Parameter weiterleiten
+            wp_redirect(home_url('/?waitlist_removed=1'));
+            exit;
+        } else {
+            wp_redirect(home_url('/?waitlist_removed=0'));
+            exit;
+        }
+    }
+}
+add_action('init', 'remove_from_waitlist');
+
+function display_waitlist_feedback() {
+    if (isset($_GET['waitlist_removed'])) {
+        $success = $_GET['waitlist_removed'] == 1;
+        $message = $success 
+            ? "Du wurdest erfolgreich von der Warteliste entfernt." 
+            : "Der Wartelisten-Eintrag existiert nicht oder ist ungültig.";
+        
+        $backgroundColor = $success ? '#2d7a1f' : '#c0392b';  // Dunklerer Grün für Erfolg, Rot für Fehler
+        $textColor = '#ffffff';  // Weißer Text für maximalen Kontrast
+
+        echo "<div id='waitlist-overlay' class='waitlist-overlay'>
+                <div id='waitlist-feedback' class='waitlist-feedback'>
+                    <span class='close-feedback' onclick='closeFeedback()'>&times;</span>
+                    <p style='font-size: 20px;'>$message</p>
+                </div>
+              </div>
+              <style>
+                .waitlist-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);  /* Halbtransparentes Schwarz */
+                    z-index: 9998;
+                }
+                .waitlist-feedback {
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background-color: $backgroundColor;
+                    color: $textColor;
+                    padding: 20px;
+                    border-radius: 5px;
+                    text-align: center;
+                    font-size: 25px;
+                    z-index: 9999;
+                    width: 80%;
+                    max-width: 400px;
+                    box-sizing: border-box;
+                    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+                }
+                .waitlist-feedback .close-feedback {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    font-size: 30px;
+                    cursor: pointer;
+                    color: $textColor;
+                }
+              </style>
+              <script>
+                function closeFeedback() {
+                    document.getElementById('waitlist-overlay').style.display = 'none';
+                }
+              </script>";
+    }
+}
+add_action('wp_footer', 'display_waitlist_feedback');
 
 
 //Adds a box to the right column and to the main column on the Events edit screens
